@@ -1,0 +1,24 @@
+﻿string_key,category,speaker,context,source_text,max_length,max_line_length,translation,status,origin,translator,notes
+sample:ui:level_up,ui,,زر في القائمة,Level Up,14,,رفع المستوى,draft,human,sample-author,
+sample:ui:level_up_alt,ui,,نفس الزر في شاشة أخرى,Level Up,14,,ارفع المستوى,draft,human,sample-author,
+sample:ui:return_title,ui,,زر في قائمة الإيقاف,Return to Title,24,,العودة إلى البداية,draft,human,sample-author,
+sample:ui:stat_insight,ui,,اسم إحصائية,Insight,12,,البصيرة,draft,human,sample-author,
+sample:ui:stat_echoes,ui,,اسم العملة,Blood Echoes,16,,أصداء الدم,draft,human,sample-author,
+sample:system:obtained,system,,رسالة عند الالتقاط,Obtained {0} Blood Echoes,,,حصلت على {0} من أصداء الدم,draft,human,sample-author,
+sample:system:used,system,,رسالة بعد الاستعمال,Used %s.,,,استخدمت %s.,draft,human,sample-author,
+sample:system:light_lamp,system,,تلميح زر,<?key@confirm?> Light the Lamp,,,<?key@confirm?> أشعل المصباح,draft,human,sample-author,
+sample:system:sell,system,,سؤال تأكيد,Sell {count} item(s) for {price} Blood Echoes?,,,أتبيع {count} من الأغراض مقابل {price} من أصداء الدم؟,draft,human,sample-author,
+sample:system:night_falls,system,,رسالة موت (من تأليفنا),The night swallows you,,,ابتلعك الليل,draft,human,sample-author,
+sample:item_name:pilgrim_bell,item_name,,اسم أداة,Rusted Pilgrim's Bell,28,,جرس الحاجّ الصدئ,draft,human,sample-author,
+sample:item_desc:pilgrim_bell,item_desc,,وصف أداة,"A bell that no longer rings.
+Pilgrims say it hums when the moon is close.",,60,"جرسٌ كفَّ عن الرنين.
+يقول الحجّاج إنه يهمهم كلما دنا القمر.",draft,human,sample-author,
+sample:item_name:clotted_vial,item_name,,اسم أداة,Clotted Blood Vial,28,,قارورة الدم المتخثّر,draft,human,sample-author,
+sample:item_desc:clotted_vial,item_desc,,وصف أداة,"A Blood Vial left too long in the cold.
+Restores less HP, but the Hunter who drinks it feels nothing at all.",,80,"قارورة دم تُركت طويلاً في البرد.
+تعيد قدراً أقل من الصحة، لكن الصياد الذي يشربها لا يشعر بشيء البتة.",draft,human,sample-author,
+sample:dialogue:warden_01,dialogue,Gate Warden,حارس متعب، نبرة جافة,"Another hunter? The bridge is closed, good hunter. The Beasts own the night now.",,,صيادٌ آخر؟ الجسر مغلق أيها الصياد الطيب. الوحوش تملك الليل الآن.,draft,human,sample-author,
+sample:dialogue:warden_02,dialogue,Gate Warden,حارس متعب، نبرة جافة,"Insight... yes. Too much of it, and the stars start whispering back.",,,البصيرة… أجل. إن زادت عن حدّها، بدأت النجوم تهمس لك.,draft,human,sample-author,
+sample:dialogue:widow_01,dialogue,Widow,امرأة خائفة خلف باب مغلق,"Please... if you see my son, tell him the lantern is still lit.",,,أرجوك… إن رأيت ابني، فأخبره أن القنديل ما زال مضاءً.,draft,human,sample-author,
+sample:place:archive,place,,اسم منطقة (من تأليفنا),Healing Church Archive,,,,pending,,,
+sample:place:outskirts,place,,اسم منطقة (من تأليفنا),Yharnam Outskirts,,,,pending,,,

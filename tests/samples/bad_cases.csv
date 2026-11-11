@@ -1,0 +1,21 @@
+﻿string_key,source_text,translation,max_length,max_line_length,expected_check,expected_severity
+bad:placeholder_missing,Obtained {0} Blood Echoes,حصلت على أصداء الدم,,,placeholders,error
+bad:printf_changed,Used %s.,استخدمت ٪s.,,,placeholders,error
+bad:code_translated,<?key@confirm?> Light the Lamp,<?مفتاح@تأكيد?> أشعل المصباح,,,placeholders,error
+bad:glossary_forbidden,The Hunter waits.,القناص ينتظر.,,,glossary_forbidden,warning
+bad:glossary_missing,Blood Echoes,دماء مرتدة,,,glossary,warning
+bad:too_long,Level Up,رفع مستوى الشخصية إلى الدرجة التالية,14,,length,error
+bad:line_too_long,"Short line.
+Second.","سطر قصير جداً ولكنه في الحقيقة طويل أكثر من اللازم.
+ثانٍ.",,20,line_length,error
+bad:persian_letters,Insight,بصیرة,,,unicode,error
+bad:presentation_forms,Blood Echoes,ﺃﺻﺪﺍﺀ ﺍﻟﺪﻡ,,,unicode,error
+bad:untranslated,Return to Title,Return to Title,,,untranslated,warning
+bad:no_arabic,Return to Title,Back,,,untranslated,error
+bad:bidi_marks,The night swallows you,ابتلعك الليل‏,,,unicode,warning
+bad:line_breaks,"A bell that no longer rings.
+Pilgrims say it hums.",جرس كف عن الرنين. يقول الحجاج إنه يهمهم.,,,line_breaks,warning
+bad:latin_punctuation,Another one? Go away.,آخر? ارحل.,,,punctuation,warning
+bad:tatweel,Hunter,الصيــاد,,,style,warning
+bad:control_char,Insight,البصيرة,,,unicode,error
+bad:latin_inside,Light the Lamp,أشعل the Lamp,,,latin,warning

@@ -1,0 +1,23 @@
+﻿id,type,speaker,context,max_length,source
+demo:ui:rest,ui,,زر في قائمة المصباح,16,Rest
+demo:ui:travel,واجهة,,زر في قائمة المصباح,16,Travel
+demo:ui:discard,ui,,زر في قائمة المخزون,16,Discard
+demo:ui:confirm_discard,ui,,سؤال تأكيد,,Discard {item}?
+demo:system:echoes_lost,system,,رسالة عند الموت,,You lost {count} Blood Echoes.
+demo:system:echoes_regained,رسالة نظام,,عند استعادة الأصداء,,Blood Echoes regained.
+demo:system:received,system,,عند استلام أداة,,You received %s.
+demo:system:door_locked,system,,تفاعل مع باب,,The door is locked from the other side.
+demo:system:need_key,system,,تفاعل مع باب,,Requires <?key@item?> to open.
+demo:item_name:ash_lantern,item_name,,اسم أداة,28,Ashen Lantern Wick
+demo:item_desc:ash_lantern,وصف عنصر,,وصف أداة,,"A wick that once burned in a chapel lamp.
+It still smells of incense and something worse."
+demo:item_name:moth_ring,item_name,,اسم خاتم,28,Ring of the Pale Moth
+demo:item_desc:moth_ring,item_desc,,وصف خاتم,,"Moths gather where Insight is plentiful.
+The wearer hears their wings at night."
+demo:dialogue:keeper_01,dialogue,Bell Keeper,عجوز يقرع الجرس، صوته مرتجف وحنون,,"You came back, hunter. Most never do."
+demo:dialogue:keeper_02,حوار,Bell Keeper,عجوز يقرع الجرس، صوته مرتجف وحنون,,"Ring it once for the lost, twice for the found... and never a third time."
+demo:dialogue:keeper_03,dialogue,Bell Keeper,عجوز يقرع الجرس، صوته مرتجف وحنون,,Take this Blood Vial. I have no use for it anymore.
+demo:dialogue:pilgrim_01,dialogue,Lost Pilgrim,حاج تائه، متحمس بشكل مريب,,Have you seen the Choir's tower? They say the sky is closer there!
+demo:dialogue:pilgrim_02,dialogue,Lost Pilgrim,حاج تائه، متحمس بشكل مريب,,{name}... is that your name? I will forget it soon.
+demo:place:bell_tower,مكان,,اسم منطقة,,Old Bell Tower
+demo:ui:rest_dup,ui,,نفس الزر في شاشة أخرى,16,Rest

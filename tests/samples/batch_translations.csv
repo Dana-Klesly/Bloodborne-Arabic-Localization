@@ -1,0 +1,23 @@
+﻿id,translation
+demo:ui:rest,استراحة
+demo:ui:travel,ارتحال
+demo:ui:discard,تخلّص
+demo:ui:confirm_discard,التخلّص من {item}؟
+demo:system:echoes_lost,فقدت {count} من أصداء الدم.
+demo:system:echoes_regained,استُعيدت أصداء الدم.
+demo:system:received,حصلت على %s.
+demo:system:door_locked,الباب موصد من الجهة الأخرى.
+demo:system:need_key,يتطلب فتحه مفتاحاً.
+demo:item_name:ash_lantern,فتيل الفانوس الرمادي
+demo:item_desc:ash_lantern,"فتيل اشتعل يوماً في مصباح كنيسة.
+ما زالت تفوح منه رائحة البخور، وشيء أسوأ."
+demo:item_name:moth_ring,خاتم العثّة الشاحبة
+demo:item_desc:moth_ring,"يحتشد العثّ حيث تفيض البصيرة.
+ويسمع حاملُه رفيف أجنحته ليلاً."
+demo:dialogue:keeper_01,عدتَ أيها الصياد. قلّما يعود أحد.
+demo:dialogue:keeper_02,اقرعه مرة للضائعين، ومرتين لمن وُجدوا... ولا تقرعه ثالثة أبداً.
+demo:dialogue:keeper_03,خذ قارورة الدم هذه. لم تعد لي حاجة بها.
+demo:dialogue:pilgrim_01,أرأيت برج الجوقة? يقولون إن السماء هناك أقرب!
+demo:dialogue:pilgrim_02,{name}... أهذا اسمك؟ سأنساه قريباً.
+demo:place:bell_tower,برج الجرس العتيق
+demo:ui:rest_dup,راحة

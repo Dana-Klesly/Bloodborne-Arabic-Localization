@@ -1,0 +1,4 @@
+arabic-reshaper
+python-bidi
+fonttools
+pillow

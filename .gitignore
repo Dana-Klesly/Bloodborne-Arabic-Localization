@@ -1,0 +1,72 @@
+# ===== Bloodborne-Arabic-Localization =====
+# Rule: never commit game files, data extracted from the game, save files,
+# local databases, or secrets.
+
+# --- Python / local environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# --- local data: database, logs, backups
+database/*.db
+database/*.db-journal
+database/*.db-wal
+database/*.db-shm
+*.sqlite
+*.sqlite3
+logs/
+backups/
+
+# --- translation batches (will contain game text once real strings are extracted)
+translation/batches/
+
+# --- game files and anything extracted from them
+*.dcx
+*.bnd
+*.bdt
+*.bhd
+*.fmg
+*.fmg.xml
+*.msgbnd
+*.tpf
+*.gfx
+*.ccm
+dvdroot_ps4/
+extraction/output/
+extraction/raw/
+mod_builder/output/
+mods/
+build/
+dist/
+
+# --- save files
+savedata/
+user/
+SPRJ*/
+userdata*
+*.sl2
+
+# --- fonts: binaries are added explicitly with their licence, never system fonts
+fonts/*.ttf
+fonts/*.otf
+fonts/*.ttc
+
+# --- secrets and local configuration
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+secrets*
+credentials*
+bbport.ini
+
+# --- OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
