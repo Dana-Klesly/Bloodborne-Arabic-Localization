@@ -56,26 +56,51 @@ def cmd_status(a):
 
 def cmd_set(a):
     with db.open_db(a.db) as conn:
-        print(db.set_translation(conn, a.key, a.text, "human", a.by))
+        print(db.set_translation(conn, a.key, a.text, "human", a.by, gender=a.gender))
 
 
 def cmd_review(a):
     with db.open_db(a.db) as conn:
-        db.mark_for_review(conn, a.key, a.by)
+        db.mark_for_review(conn, a.key, a.by, gender=a.gender)
     print("needs_review")
 
 
 def cmd_approve(a):
     from validation.validator import errors_for
     with db.open_db(a.db) as conn:
-        db.approve(conn, a.key, a.reviewer, errors_for(conn, a.key, a.font))
-    print("approved")
+        db.approve(conn, a.key, a.reviewer, errors_for(conn, a.key, a.font, gender=a.gender), gender=a.gender)
+    print("approved" + (f" ({a.gender} version only)" if a.gender else ""))
 
 
 def cmd_reject(a):
     with db.open_db(a.db) as conn:
-        db.reject(conn, a.key, a.by, a.note)
+        db.reject(conn, a.key, a.by, a.note, gender=a.gender)
     print("draft")
+
+
+def cmd_show(a):
+    with db.open_db(a.db) as conn:
+        _out([{k: r[k] for k in ("string_key", "gender", "id", "status", "origin", "translation",
+                                 "reviewer", "source_text", "updated_at")} for r in db.versions(conn, a.key)])
+
+
+def cmd_gender_split(a):
+    with db.open_db(a.db) as conn:
+        _out(db.split_gender(conn, a.key, a.female, a.by, male_text=a.male, note=a.note))
+
+
+def cmd_gender_merge(a):
+    with db.open_db(a.db) as conn:
+        _out(db.merge_gender(conn, a.key, a.keep, a.by, note=a.note))
+
+
+def cmd_select_gender(a):
+    with db.open_db(a.db) as conn:
+        if a.gender:
+            db.set_active_gender(conn, a.gender)
+        current = db.get_active_gender(conn)
+    print(f"active player gender: {current or 'not set'}"
+          + ("" if current else "  (choose with: cli.py select-gender male|female)"))
 
 
 def cmd_validate(a):
@@ -99,7 +124,7 @@ def cmd_preview(a):
         items.append(PreviewItem("text", a.english or "", a.text, a.max_px))
     else:
         with db.open_db(a.db) as conn:
-            sql = "SELECT string_key, status, source_text, translation FROM strings" \
+            sql = "SELECT string_key, gender, status, source_text, translation FROM strings" \
                   " WHERE translation IS NOT NULL"
             params = []
             if a.status:
@@ -109,13 +134,24 @@ def cmd_preview(a):
                 sql += f" AND string_key IN ({','.join('?' * len(a.key))})"
                 params += a.key
             for r in conn.execute(sql + " ORDER BY string_key LIMIT ?", params + [a.limit]):
-                items.append(PreviewItem(f"{r['string_key']} [{r['status']}]",
+                g = "" if r["gender"] == "shared" else f" ({r['gender']})"
+                items.append(PreviewItem(f"{r['string_key']}{g} [{r['status']}]",
                                          r["source_text"], r["translation"], a.max_px))
     if not items:
         print("nothing to preview")
         return 1
     _out(render(items, a.out, font_path=a.font, size=a.size, wrap=a.wrap))
     return 0
+
+
+def cmd_migrate(a):
+    from common.paths import ROOT
+    conn = db.connect(a.db)
+    try:
+        report = db.migrate(conn, Path(a.backup_dir) if a.backup_dir else ROOT / "backups")
+    finally:
+        conn.close()
+    _out(report)
 
 
 def cmd_sources_import(a):
@@ -175,19 +211,42 @@ def main(argv=None):
 
     s = sub.add_parser("set", help="set a human translation (-> draft)")
     s.add_argument("key"); s.add_argument("text"); s.add_argument("--by", required=True)
+    s.add_argument("--gender", choices=db.GENDERS, help="required for strings with male/female versions")
     s.set_defaults(fn=cmd_set)
 
     s = sub.add_parser("review", help="draft -> needs_review")
     s.add_argument("key"); s.add_argument("--by", required=True)
+    s.add_argument("--gender", choices=db.GENDERS, help="required for strings with male/female versions")
     s.set_defaults(fn=cmd_review)
 
     s = sub.add_parser("approve", help="needs_review -> approved (human reviewer, no validation errors)")
     s.add_argument("key"); s.add_argument("--reviewer", required=True); s.add_argument("--font")
+    s.add_argument("--gender", choices=db.GENDERS, help="required for strings with male/female versions")
     s.set_defaults(fn=cmd_approve)
 
     s = sub.add_parser("reject", help="needs_review/approved -> draft")
     s.add_argument("key"); s.add_argument("--by", required=True); s.add_argument("--note")
+    s.add_argument("--gender", choices=db.GENDERS, help="required for strings with male/female versions")
     s.set_defaults(fn=cmd_reject)
+
+    s = sub.add_parser("show", help="show all versions of a string")
+    s.add_argument("key")
+    s.set_defaults(fn=cmd_show)
+
+    s = sub.add_parser("gender-split", help="shared -> male + female versions (only when the Arabic differs)")
+    s.add_argument("key"); s.add_argument("--female", required=True)
+    s.add_argument("--male", help="default: keep the current shared translation as the male version")
+    s.add_argument("--by", required=True); s.add_argument("--note")
+    s.set_defaults(fn=cmd_gender_split)
+
+    s = sub.add_parser("gender-merge", help="male + female -> one shared translation (history is kept)")
+    s.add_argument("key"); s.add_argument("--keep", required=True, choices=db.GENDERS)
+    s.add_argument("--by", required=True); s.add_argument("--note")
+    s.set_defaults(fn=cmd_gender_merge)
+
+    s = sub.add_parser("select-gender", help="show or set the active player gender (male/female)")
+    s.add_argument("gender", nargs="?", choices=db.GENDERS)
+    s.set_defaults(fn=cmd_select_gender)
 
     s = sub.add_parser("validate", help="run all checks, write logs/validation_*.csv")
     s.add_argument("--font", help="also check glyph coverage of this font")
@@ -211,6 +270,10 @@ def main(argv=None):
     s.add_argument("--wrap", action="store_true", help="word-wrap to --max-px")
     s.add_argument("--out", default=str(LOGS_DIR / "preview.png"))
     s.set_defaults(fn=cmd_preview)
+
+    s = sub.add_parser("migrate", help="upgrade the database schema (verified backup first)")
+    s.add_argument("--backup-dir", help="default: backups/")
+    s.set_defaults(fn=cmd_migrate)
 
     s = sub.add_parser("sources-import", help="import English source strings (id, source, context, type)")
     s.add_argument("csv")
@@ -249,7 +312,10 @@ def main(argv=None):
         for p in exc.problems:
             print(f"  - {p}", file=sys.stderr)
         return 2
-    except (db.WorkflowError, KeyError, ValueError, FileNotFoundError) as exc:
+    except db.MigrationRequired as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 3
+    except (db.WorkflowError, KeyError, ValueError, FileNotFoundError, RuntimeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 

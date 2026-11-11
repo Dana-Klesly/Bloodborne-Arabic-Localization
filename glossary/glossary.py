@@ -43,6 +43,8 @@ class Term:
     notes: str = ""
     status: str = "proposed"
     case_sensitive: bool = False
+    female_ar: str = ""                                   # form used in female versions (optional)
+    female_variants_ar: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         flags = 0 if self.case_sensitive else re.IGNORECASE
@@ -54,6 +56,12 @@ class Term:
         for ar in [self.approved_ar, *self.variants_ar]:
             self._accepted.update(definite_forms(ar))
         self._forbidden = [normalize_for_match(f) for f in self.forbidden_ar]
+        if self.female_ar:
+            self._accepted_female = set()
+            for ar in [self.female_ar, *self.female_variants_ar]:
+                self._accepted_female.update(definite_forms(ar))
+        else:
+            self._accepted_female = self._accepted          # no female form defined: same rule
 
     def occurs_in(self, english: str) -> bool:
         return bool(english and self._pattern.search(english))
@@ -61,9 +69,15 @@ class Term:
     def count_in(self, english: str) -> int:
         return len(self._pattern.findall(english or ""))
 
-    def used_in(self, arabic: str) -> bool:
+    def used_in(self, arabic: str, gender: str = "shared") -> bool:
         norm = normalize_for_match(arabic)
-        return any(form in norm for form in self._accepted)
+        accepted = self._accepted_female if gender == "female" else self._accepted
+        return any(form in norm for form in accepted)
+
+    def expected(self, gender: str = "shared") -> tuple[str, list[str]]:
+        if gender == "female" and self.female_ar:
+            return self.female_ar, self.female_variants_ar
+        return self.approved_ar, self.variants_ar
 
     def forbidden_used(self, arabic: str) -> list[str]:
         norm = normalize_for_match(arabic)
@@ -93,6 +107,8 @@ def read_csv(path: Path | str = GLOSSARY_CSV) -> list[Term]:
                 notes=(rec.get("notes") or "").strip(),
                 status=status,
                 case_sensitive=(rec.get("case_sensitive") or "0").strip() in ("1", "true", "yes"),
+                female_ar=(rec.get("female_ar") or "").strip(),             # optional columns
+                female_variants_ar=_split(rec.get("female_variants_ar")),
             ))
     seen = {}
     for t in terms:
@@ -110,9 +126,11 @@ def load_into_db(conn, path: Path | str = GLOSSARY_CSV) -> int:
     for t in terms:
         conn.execute(
             "INSERT INTO glossary(term_en, aliases_en, approved_ar, variants_ar, forbidden_ar,"
-            " category, context, notes, status, case_sensitive) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            " category, context, notes, status, case_sensitive, female_ar, female_variants_ar)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (t.term_en, "|".join(t.aliases_en), t.approved_ar, "|".join(t.variants_ar),
-             "|".join(t.forbidden_ar), t.category, t.context, t.notes, t.status, int(t.case_sensitive)),
+             "|".join(t.forbidden_ar), t.category, t.context, t.notes, t.status, int(t.case_sensitive),
+             t.female_ar or None, "|".join(t.female_variants_ar) or None),
         )
     return len(terms)
 
@@ -122,7 +140,9 @@ def from_db(conn) -> list[Term]:
                  aliases_en=_split(r["aliases_en"]), variants_ar=_split(r["variants_ar"]),
                  forbidden_ar=_split(r["forbidden_ar"]), category=r["category"] or "",
                  context=r["context"] or "", notes=r["notes"] or "", status=r["status"],
-                 case_sensitive=bool(r["case_sensitive"]))
+                 case_sensitive=bool(r["case_sensitive"]),
+                 female_ar=(r["female_ar"] or "") if "female_ar" in r.keys() else "",
+                 female_variants_ar=_split(r["female_variants_ar"]) if "female_variants_ar" in r.keys() else [])
             for r in conn.execute("SELECT * FROM glossary ORDER BY term_en")]
 
 
