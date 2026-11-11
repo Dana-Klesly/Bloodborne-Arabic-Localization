@@ -131,7 +131,11 @@ def run(conn, font_path=None, statuses=None, report_dir: Path = LOGS_DIR) -> dic
         if rid in selected:
             per_row.setdefault(rid, []).extend(extra)
 
-    conn.execute("DELETE FROM validation_issues")
+    if statuses:
+        # partial run: replace only the results of the rows checked now, keep everyone else's
+        conn.executemany("DELETE FROM validation_issues WHERE string_id = ?", [(rid,) for rid in selected])
+    else:
+        conn.execute("DELETE FROM validation_issues")
     report = []
     for r in rows:
         for issue in per_row.get(r["id"], []):
