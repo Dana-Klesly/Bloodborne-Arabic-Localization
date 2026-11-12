@@ -166,7 +166,7 @@ class ImportTests(BatchTestBase):
         self.assertEqual(counts["approved"], 0, "nothing may be approved by an import")
         self.assertEqual(counts["needs_review"], 19)
         row = db.get_string(self.conn, "demo:system:received")
-        self.assertEqual((row["origin"], row["machine_model"]), ("machine", "claude"))
+        self.assertEqual((row["origin"], row["machine_model"]), ("machine", batch.MACHINE_MODEL))
 
     def test_arabic_and_placeholders_stored_exactly(self):
         self.do_import(self.fill(self.file))
@@ -317,10 +317,21 @@ class ImportTests(BatchTestBase):
         stats = self.do_import(self.fill(self.file, name="again.csv"), overwrite_drafts=True)
         self.assertEqual(db.get_string(self.conn, "demo:ui:discard")["translation"], TRANSLATIONS["demo:ui:discard"])
 
-    def test_claude_cannot_approve(self):
+    def test_machine_cannot_approve(self):
         self.do_import(self.fill(self.file))
         with self.assertRaises(db.WorkflowError):
-            db.approve(self.conn, "demo:ui:rest", "claude")
+            db.approve(self.conn, "demo:ui:rest", "ai")
+
+    def test_legacy_machine_name_cannot_approve(self):
+        # the old default machine-translator name must stay blocked as a reviewer
+        self.do_import(self.fill(self.file))
+        self.assertEqual(self.status("demo:ui:rest"), "needs_review")
+        for name in ("claude", "Claude", " CLAUDE "):
+            with self.assertRaises(db.WorkflowError):
+                db.approve(self.conn, "demo:ui:rest", name)
+        self.assertEqual(self.status("demo:ui:rest"), "needs_review")
+        self.assertEqual(db.status_counts(self.conn)["approved"], 0)
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM history WHERE new_status = 'approved'").fetchone()[0], 0)
 
     def test_list_batches(self):
         self.do_import(self.fill(self.file))

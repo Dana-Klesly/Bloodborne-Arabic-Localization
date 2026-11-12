@@ -1,7 +1,7 @@
 # Bloodborne-Arabic-Localization
 
 مشروع تعريب مجتمعي للعبة Bloodborne على نسخة bbport.
-المترجم الأساسي هو Claude، وبيشتغل على دفعات CSV. ترجماته بتوصل لـ `needs_review` إذا ما فيها أخطاء، وإذا فيها أخطاء بتضل `draft`. كل سطر لازم يراجعه إنسان ويعتمده باسمه قبل ما يدخل المود.
+الترجمة الآلية بتشتغل على دفعات CSV. ترجماته بتوصل لـ `needs_review` إذا ما فيها أخطاء، وإذا فيها أخطاء بتضل `draft`. كل سطر لازم يراجعه إنسان ويعتمده باسمه قبل ما يدخل المود.
 
 ## بنية المجلدات
 
@@ -13,7 +13,7 @@
 | `validation` | المدقق: الأكواد، القاموس، الطول، اليونيكود، الفراغات والتكرار | ✅ |
 | `fonts` | فحص دعم الخط للعربي + صور معاينة PNG. حطي هون خطوط OFL | ✅ |
 | `tests` | اختبارات + عينات أصلية من تأليفنا (`tests/samples`) | ✅ |
-| `translation` | دفعات الترجمة (CSV): `batch.py` و`CLAUDE_TRANSLATOR.md` و`batches/out` و`batches/in` | ✅ |
+| `translation` | دفعات الترجمة (CSV): `batch.py` و`TRANSLATOR.md` و`batches/out` و`batches/in` | ✅ |
 | `extraction` | استخراج النصوص من ملفات اللعبة | ⏳ بعد التحقق من نسخة رسمية |
 | `mod_builder` | بناء ملفات المود | ⏳ لاحقاً |
 | `logs` | تقارير التدقيق والمعاينات | |
@@ -48,6 +48,22 @@ pending ──(ترجمة)──> draft ──(review)──> needs_review ─�
 .venv\Scripts\python cli.py export translation\export.csv
 ```
 
+### نسخ الذكر والأنثى
+
+النص بيضل `shared` (ترجمة وحدة)، إلا إذا الصياغة العربية بتتغير حسب جنس شخصية اللاعب، ولو بالتشكيل بس. وقتها بيصير إله نسختين `male` و`female` بنفس المعرّف، وكل نسخة بتنراجع وبتنعتمد لحالها.
+
+```
+.venv\Scripts\python cli.py show demo:system:received
+.venv\Scripts\python cli.py gender-split demo:system:received --male "تسلّمتَ %s." --female "تسلّمتِ %s." --by Dana
+.venv\Scripts\python cli.py review demo:system:received --gender female --by Dana
+.venv\Scripts\python cli.py approve demo:system:received --gender female --reviewer Dana
+.venv\Scripts\python cli.py gender-merge demo:system:received --keep male --by Dana
+.venv\Scripts\python cli.py select-gender female
+```
+- النص اللي إله نسختين، أي أمر عليه بدون `--gender` بينرفض.
+- بالدفعات، عمود `translation_female` هو اللي بيعمل التقسيم. الشرح كامل بـ `translation/TRANSLATOR.md`.
+- الجنس النشط بينحفظ بقاعدة البيانات، وما بيتغير إلا بأمر `select-gender`.
+
 ### دفعات الترجمة
 
 ```
@@ -56,7 +72,7 @@ pending ──(ترجمة)──> draft ──(review)──> needs_review ─�
 .venv\Scripts\python cli.py batch-import translation\batches\in\batch_XXXX.csv
 .venv\Scripts\python cli.py batch-list
 ```
-ملف الدفعة بيطلع بـ `translation\batches\out\`، ومنرجّعه مترجم لـ `translation\batches\in\`. التفاصيل بـ `translation/README.md`، وتعليمات المترجم بـ `translation/CLAUDE_TRANSLATOR.md`.
+ملف الدفعة بيطلع بـ `translation\batches\out\`، ومنرجّعه مترجم لـ `translation\batches\in\`. التفاصيل بـ `translation/README.md`، وتعليمات المترجم بـ `translation/TRANSLATOR.md`.
 
 الاختبارات: `powershell -ExecutionPolicy Bypass -File tools\run_tests.ps1`
 
@@ -66,3 +82,7 @@ pending ──(ترجمة)──> draft ──(review)──> needs_review ─�
 - ما بننشر ولا بنوزع أي ملف من ملفات اللعبة (`.gitignore` بيمنعهم).
 - قاعدة البيانات بتخزن العربي بشكله **المنطقي** (حروف عادية). ربط الحروف وقلب الاتجاه بيصيروا بس وقت المعاينة والبناء.
 - العينات بالمشروع من تأليفنا، مش منسوخة من اللعبة.
+
+## أدوات مساعدة
+
+تم استعمال Claude وCodex بالمساعدة بالكود والترجمة والمراجعة. كل ترجمة بتنراجع وبتنعتمد من إنسان.

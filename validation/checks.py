@@ -68,16 +68,19 @@ def check_placeholders(source: str, translation: str) -> list[Issue]:
 
 
 # ------------------------------------------------------------------ glossary
-def check_glossary(source: str, translation: str, terms) -> list[Issue]:
-    """terms: list of glossary.glossary.Term (already filtered with terms_in or not)."""
+def check_glossary(source: str, translation: str, terms, gender: str = "shared") -> list[Issue]:
+    """terms: list of glossary.glossary.Term. Female versions use the term's female form if it has one."""
     from glossary.glossary import terms_in
     issues = []
     for t in terms_in(source, terms):
         make = _e if t.status == "approved" else _w
-        if not t.used_in(translation):
-            make_msg = f"'{t.term_en}' should be translated as '{t.approved_ar}'"
-            if t.variants_ar:
-                make_msg += f" (or: {' / '.join(t.variants_ar)})"
+        if not t.used_in(translation, gender):
+            want, also = t.expected(gender)
+            make_msg = f"'{t.term_en}' should be translated as '{want}'"
+            if also:
+                make_msg += f" (or: {' / '.join(also)})"
+            if gender == "female" and t.female_ar:
+                make_msg += " (female form)"
             issues.append(make("glossary", make_msg + f" [{t.status}]"))
         for bad in t.forbidden_used(translation):
             issues.append(make("glossary_forbidden",
@@ -160,14 +163,14 @@ def check_font_coverage(translation: str, cmap: set[int]) -> list[Issue]:
 
 
 def check_string(source: str, translation, status: str, max_length=None, max_line_length=None,
-                 terms=None, cmap=None) -> list[Issue]:
-    """Run every single-string check."""
+                 terms=None, cmap=None, gender: str = "shared") -> list[Issue]:
+    """Run every single-string check (on one version: shared, male or female)."""
     issues = check_empty(source, translation, status)
     if not translation or not translation.strip():
         return issues
     issues += check_placeholders(source or "", translation)
     if terms:
-        issues += check_glossary(source or "", translation, terms)
+        issues += check_glossary(source or "", translation, terms, gender)
     issues += check_length(source or "", translation, max_length, max_line_length)
     issues += check_unicode(translation)
     if cmap is not None:

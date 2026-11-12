@@ -1,7 +1,7 @@
 # translation
 
-Batch translation by CSV. The translator is Claude (no local model, no Ollama).
-Rules for the translator: `CLAUDE_TRANSLATOR.md`.
+Batch translation by CSV. The translator is an AI model working from the CSV (no local model, no Ollama).
+Rules for the translator: `TRANSLATOR.md`.
 
 ```
 batches/out/<batch_id>.csv   exported by `cli.py batch-export`   (send to the translator)

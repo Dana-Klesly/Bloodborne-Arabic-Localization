@@ -2,7 +2,7 @@
 
   1. import_sources()  English strings  ->  DB (status pending)
   2. export_batch()    pending strings  ->  translation/batches/out/<batch_id>.csv
-  3. (translator, e.g. Claude, fills the 'translation' column, see CLAUDE_TRANSLATOR.md)
+  3. (the translator fills the 'translation' column, see TRANSLATOR.md)
   4. import_batch()    returned CSV     ->  DB
        * every row is checked against the batch record and the source fingerprint
        * translation stored as machine output
@@ -23,12 +23,12 @@ from common.placeholders import find_tokens
 from database import db
 from glossary.glossary import from_db, read_csv as read_glossary, terms_in
 from validation.checks import Issue, check_string
-from validation.validator import duplicate_issues
+from validation.validator import duplicate_issues, pair_issues
 
 BATCH_OUT = TRANSLATION_DIR / "batches" / "out"
 BATCH_IN = TRANSLATION_DIR / "batches" / "in"
 DEFAULT_BATCH_SIZE = 40
-MACHINE_MODEL = "claude"
+MACHINE_MODEL = "ai"
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_.:/\-]+$")
 TYPES = {
@@ -39,8 +39,10 @@ TYPES = {
     "system": "system", "رسالة نظام": "system",
     "place": "place", "مكان": "place",
 }
-BATCH_COLUMNS = ["batch_id", "id", "type", "speaker", "context", "max_length", "source",
-                 "placeholders", "glossary", "source_hash", "translation", "translator_note"]
+BATCH_COLUMNS = ["batch_id", "id", "type", "gender", "speaker", "context", "max_length", "source",
+                 "placeholders", "glossary", "source_hash", "translation", "translation_female", "translator_note"]
+# gender column (read-only, informative): "shared" = one translation for both player genders,
+# "male+female" = the string already has two versions; translation = male, translation_female = female.
 
 
 class BatchError(Exception):
@@ -171,7 +173,8 @@ def export_batch(conn, limit: int = DEFAULT_BATCH_SIZE, types=None, statuses=("p
                  include_open: bool = False, out_dir: Path | None = None) -> dict:
     """Write the next batch of strings for the translator. Rows already in an
     exported-but-not-imported batch are skipped unless include_open=True."""
-    sql = "SELECT * FROM strings WHERE status IN (%s)" % ",".join("?" * len(statuses))
+    sql = ("SELECT * FROM strings b WHERE gender IN ('shared','male') AND EXISTS (SELECT 1 FROM strings v"
+           " WHERE v.string_key = b.string_key AND v.status IN (%s))" % ",".join("?" * len(statuses)))
     params = list(statuses)
     if types:
         types = [TYPES.get(t, t) for t in types]
@@ -201,10 +204,13 @@ def export_batch(conn, limit: int = DEFAULT_BATCH_SIZE, types=None, statuses=("p
         h = source_hash(r["source_text"])
         conn.execute("INSERT INTO batch_items(batch_id, string_id, string_key, source_hash) VALUES (?,?,?,?)",
                      (batch_id, r["id"], r["string_key"], h))
-        gl = "; ".join(f"{t.term_en} = {t.approved_ar}" for t in terms_in(r["source_text"], terms))
-        lines.append([batch_id, r["string_key"], r["category"] or "", r["speaker"] or "", r["context"] or "",
+        gl = "; ".join(f"{t.term_en} = {t.approved_ar}" + (f" (female: {t.female_ar})" if t.female_ar else "")
+                       for t in terms_in(r["source_text"], terms))
+        lines.append([batch_id, r["string_key"], r["category"] or "",
+                      "male+female" if r["gender"] == "male" else "shared",
+                      r["speaker"] or "", r["context"] or "",
                       "" if r["max_length"] is None else r["max_length"], r["source_text"],
-                      " | ".join(find_tokens(r["source_text"])), gl, h, "", ""])
+                      " | ".join(find_tokens(r["source_text"])), gl, h, "", "", ""])
     ensure_dir(out_path.parent)
     with open(out_path, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
@@ -250,9 +256,10 @@ def import_batch(conn, csv_path, translator: str = MACHINE_MODEL, allow_overwrit
         if rid in seen:
             problems.append(f"line {line}: duplicate id {rid!r} (first on line {seen[rid]})")
         seen.setdefault(rid, line)
-        tr = r.get("translation") or ""
-        if tr.strip() and _looks_like_lost_encoding(tr):
-            problems.append(f"line {line}: translation of {rid!r} looks like lost Arabic encoding: {tr[:30]!r}")
+        for col in ("translation", "translation_female"):
+            tr = r.get(col) or ""
+            if tr.strip() and _looks_like_lost_encoding(tr):
+                problems.append(f"line {line}: {col} of {rid!r} looks like lost Arabic encoding: {tr[:30]!r}")
     if problems:
         raise BatchError(f"{csv_path}: file refused, nothing imported", problems)
 
@@ -260,98 +267,177 @@ def import_batch(conn, csv_path, translator: str = MACHINE_MODEL, allow_overwrit
     terms = _terms(conn)
     report, results = [], {}
     stats = {"accepted_review": 0, "accepted_draft": 0, "unchanged": 0, "rejected": 0, "skipped": 0,
-             "errors": 0, "warnings": 0}
+             "errors": 0, "warnings": 0, "split": 0}
+    has_female_col = "translation_female" in rows[0]
+    history_start = conn.execute("SELECT coalesce(max(id), 0) FROM history").fetchone()[0]
 
-    def reject(rid, reason, msg, item=None):
+    def add(rid, gender, outcome, status, issues, source="", text=""):
+        if not issues:
+            report.append((rid, gender, outcome, status, "", "", "", source, text))
+        for i in issues:
+            if i.severity == "error":
+                stats["errors"] += 1
+            elif i.severity == "warning":
+                stats["warnings"] += 1
+            report.append((rid, gender, outcome, status, i.severity, i.check, i.message, source, text))
+
+    def reject(rid, reason, msg, item=None, gender=""):
         stats["rejected"] += 1
-        report.append((rid, "rejected", "", "error", reason, msg, "", ""))
+        report.append((rid, gender, "rejected", "", "error", reason, msg, "", ""))
         if item is not None:
             results[item["string_id"]] = "rejected"
+
+    def protection(row) -> tuple[str, str] | None:
+        if row["status"] == "approved" and not allow_overwrite_approved:
+            return ("approved_protected", "version is approved; use --allow-overwrite-approved to replace it "
+                                          "(it would go back to review)")
+        if row["status"] in ("draft", "needs_review") and row["origin"] == "human" \
+                and row["translation"] and not overwrite_drafts:
+            return ("human_draft_protected", f"version has a human translation ({row['status']}); "
+                                             f"use --overwrite-drafts to replace it")
+        return None
+
+    def finish(row_id, extra_issues=()):
+        """Validate one version; errors keep it in draft, otherwise it goes to needs_review."""
+        row = conn.execute("SELECT * FROM strings WHERE id=?", (row_id,)).fetchone()
+        issues = check_string(row["source_text"], row["translation"], "draft", row["max_length"],
+                              row["max_line_length"], terms, gender=row["gender"])
+        if any(i.severity == "error" for i in issues):
+            outcome = "accepted_draft"
+        else:
+            if row["status"] == "draft":
+                db._log(conn, row, "needs_review", row["translation"], row["origin"], "batch-import")
+                conn.execute("UPDATE strings SET status='needs_review', updated_at=datetime('now') WHERE id=?",
+                             (row_id,))
+            outcome = "accepted_review"
+        conn.execute("DELETE FROM validation_issues WHERE string_id=?", (row_id,))
+        for i in issues:
+            conn.execute("INSERT INTO validation_issues(string_id, severity, check_name, message) VALUES (?,?,?,?)",
+                         (row_id, i.severity, i.check, i.message))
+        row = conn.execute("SELECT * FROM strings WHERE id=?", (row_id,)).fetchone()
+        return outcome, row, list(extra_issues) + issues
+
+    def apply_version(row, text, note, src):
+        """Write one version (shared, male or female). Returns its outcome."""
+        if text == row["translation"]:
+            add(row["string_key"], row["gender"], "unchanged", row["status"],
+                [Issue("info", "unchanged", "translation identical to the database")], src, text)
+            return "unchanged"
+        prot = protection(row)
+        if prot:
+            report.append((row["string_key"], row["gender"], "rejected", row["status"], "error", prot[0], prot[1],
+                           "", ""))
+            return "rejected"
+        overwrite_note = None
+        if row["translation"]:
+            overwrite_note = f"replaced previous {row['status']} ({row['origin']}) translation"
+        db._set_row_translation(conn, row, text, "machine", translator, MACHINE_MODEL,
+                                "; ".join(x for x in (f"batch {batch_id}", overwrite_note, note) if x))
+        extra = [Issue("warning", "overwrite", overwrite_note)] if overwrite_note else []
+        if note:
+            extra.append(Issue("info", "translator_note", note))
+        outcome, after, issues = finish(row["id"], extra)
+        add(row["string_key"], row["gender"], outcome, after["status"], issues, src, text)
+        return outcome
+
+    order = ["skipped", "unchanged", "accepted_review", "accepted_draft", "rejected"]
 
     for r in rows:
         rid = r["id"].strip()
         tr = r.get("translation") or ""
+        trf = (r.get("translation_female") or "") if has_female_col else ""
         note = (r.get("translator_note") or "").strip() or None
-        current = conn.execute("SELECT * FROM strings WHERE string_key=?", (rid,)).fetchone()
-        if current is None:
+        src = r.get("source") or ""
+        if not conn.execute("SELECT 1 FROM strings WHERE string_key=?", (rid,)).fetchone():
             reject(rid, "unknown_id", "id does not exist in the database")
             continue
+        current = db.get_string(conn, rid)                       # shared, or male of a split string
         item = items.get(rid)
         if item is None:
             reject(rid, "not_in_batch", f"id was not exported in {batch_id}")
             continue
-        # fingerprints: file source vs export, DB source vs export
-        if source_hash(r.get("source") or "") != item["source_hash"] or \
-                (r.get("source_hash") or "").strip() != item["source_hash"]:
+        # fingerprints: file source vs export, DB source vs export (same source for both versions)
+        if source_hash(src) != item["source_hash"] or (r.get("source_hash") or "").strip() != item["source_hash"]:
             reject(rid, "modified_source", "the 'source' or 'source_hash' column was changed after export", item)
             continue
         if source_hash(current["source_text"]) != item["source_hash"]:
             reject(rid, "stale", "English source changed in the DB since export; export a new batch", item)
             continue
         if not tr.strip():
+            if trf.strip():
+                reject(rid, "female_without_male",
+                       "translation_female is filled but translation (male/shared) is empty", item)
+                continue
             stats["skipped"] += 1
             results[item["string_id"]] = "skipped"
-            report.append((rid, "skipped", current["status"], "info", "empty", "no translation in file", "", ""))
-            continue
-        if tr == current["translation"]:
-            stats["unchanged"] += 1
-            results[item["string_id"]] = "unchanged"
-            report.append((rid, "unchanged", current["status"], "info", "unchanged",
-                           "translation identical to the database", r["source"], tr))
-            continue
-        if current["status"] == "approved" and not allow_overwrite_approved:
-            reject(rid, "approved_protected",
-                   "row is approved; use --allow-overwrite-approved to replace it (it would go back to review)", item)
-            continue
-        if current["status"] in ("draft", "needs_review") and current["origin"] == "human" \
-                and current["translation"] and not overwrite_drafts:
-            reject(rid, "human_draft_protected",
-                   f"row has a human translation ({current['status']}); use --overwrite-drafts to replace it", item)
+            report.append((rid, current["gender"], "skipped", current["status"], "info", "empty",
+                           "no translation in file", "", ""))
             continue
 
-        overwrite_note = None
-        if current["translation"]:
-            overwrite_note = f"replaced previous {current['status']} ({current['origin']}) translation"
-        db.set_translation(conn, rid, tr, "machine", translator, machine_model=MACHINE_MODEL,
-                           note="; ".join(x for x in (f"batch {batch_id}", overwrite_note, note) if x))
-        issues = check_string(current["source_text"], tr, "draft", current["max_length"],
-                              current["max_line_length"], terms)
-        errors = [i for i in issues if i.severity == "error"]
-        if errors:
-            outcome = "accepted_draft"
+        if current["gender"] == "shared":
+            if trf.strip() and trf.strip() != tr.strip():
+                # ---- split into male + female
+                prot = protection(current)
+                if prot:
+                    reject(rid, prot[0], prot[1] + " (needed to split into male/female)", item, "shared")
+                    continue
+                db.split_gender(conn, rid, trf, translator, male_text=tr, origin="machine",
+                                machine_model=MACHINE_MODEL,
+                                note="; ".join(x for x in (f"batch {batch_id}", note) if x))
+                stats["split"] += 1
+                outs = []
+                for g, text in (("male", tr), ("female", trf)):
+                    row = db.get_string(conn, rid, g)
+                    extra = [Issue("info", "split", "string split into male/female versions")]
+                    if note:
+                        extra.append(Issue("info", "translator_note", note))
+                    outcome, after, issues = finish(row["id"], extra)
+                    add(rid, g, outcome, after["status"], issues, src, text)
+                    outs.append(outcome)
+                outcome = max(outs, key=order.index)
+            else:
+                if trf.strip():
+                    report.append((rid, "shared", "", current["status"], "warning", "female_identical",
+                                   "translation_female equals translation; kept one shared translation", src, trf))
+                    stats["warnings"] += 1
+                outcome = apply_version(current, tr, note, src)
         else:
-            db.mark_for_review(conn, rid, "batch-import")
-            outcome = "accepted_review"
-        stats[outcome] += 1
-        results[item["string_id"]] = outcome
-        after = db.get_string(conn, rid)
-        conn.execute("DELETE FROM validation_issues WHERE string_id=?", (after["id"],))
-        for i in issues:
-            conn.execute("INSERT INTO validation_issues(string_id, severity, check_name, message) VALUES (?,?,?,?)",
-                         (after["id"], i.severity, i.check, i.message))
-        if overwrite_note:
-            issues = [Issue("warning", "overwrite", overwrite_note)] + issues
-        if note:
-            issues.append(Issue("info", "translator_note", note))
-        if not issues:
-            report.append((rid, outcome, after["status"], "", "", "", r["source"], tr))
-        for i in issues:
-            if i.severity == "error":
-                stats["errors"] += 1
-            elif i.severity == "warning":
+            # ---- already split: update the versions given in the file
+            outs = [apply_version(current, tr, note, src)]
+            if trf.strip():
+                outs.append(apply_version(db.get_string(conn, rid, "female"), trf, None, src))
+            elif tr != current["translation"]:
+                report.append((rid, "female", "", db.get_string(conn, rid, "female")["status"], "warning",
+                               "female_unchanged", "file has no translation_female; the female version was "
+                               "not updated", "", ""))
                 stats["warnings"] += 1
-            report.append((rid, outcome, after["status"], i.severity, i.check, i.message, r["source"], tr))
+            outcome = max(outs, key=order.index)
+
+        if outcome == "rejected":
+            stats["rejected"] += 1
+        else:
+            stats[outcome] += 1
+        results[item["string_id"]] = outcome
+        # checks between the two versions (identical / diacritics only / different codes)
+        if db.is_gendered(conn, rid):
+            for vid, issues in pair_issues(db.versions(conn, rid)).items():
+                v = conn.execute("SELECT gender, status FROM strings WHERE id=?", (vid,)).fetchone()
+                for i in issues:
+                    if i.severity == "warning":
+                        stats["warnings"] += 1
+                    report.append((rid, v["gender"], outcome, v["status"], i.severity, i.check, i.message, "", ""))
 
     # consistency warnings against the whole DB (same English, different Arabic)
     all_rows = conn.execute("SELECT * FROM strings").fetchall()
     batch_string_ids = {i["string_id"] for i in items.values()}
     for sid, issues in duplicate_issues(all_rows).items():
         if sid in batch_string_ids and results.get(sid) in ("accepted_review", "accepted_draft"):
-            key = conn.execute("SELECT string_key, status FROM strings WHERE id=?", (sid,)).fetchone()
+            key = conn.execute("SELECT string_key, gender, status FROM strings WHERE id=?", (sid,)).fetchone()
             for i in issues:
                 if i.severity == "warning":
                     stats["warnings"] += 1
-                report.append((key["string_key"], results[sid], key["status"], i.severity, i.check, i.message, "", ""))
+                report.append((key["string_key"], key["gender"], results[sid], key["status"], i.severity, i.check,
+                               i.message, "", ""))
 
     for sid, res in results.items():
         conn.execute("UPDATE batch_items SET result=? WHERE batch_id=? AND string_id=?", (res, batch_id, sid))
@@ -361,11 +447,12 @@ def import_batch(conn, csv_path, translator: str = MACHINE_MODEL, allow_overwrit
                  ("imported" if open_left == 0 else "partially_imported", batch_id))
 
     stats["batch_id"] = batch_id
-    stats["approved_by_import"] = 0
-    order = {"error": 0, "warning": 1, "info": 2, "": 3}
-    report.sort(key=lambda x: (order[x[3]], x[0]))
+    stats["approved_by_import"] = conn.execute(          # must always be 0
+        "SELECT COUNT(*) FROM history WHERE id > ? AND new_status='approved'", (history_start,)).fetchone()[0]
+    sev_order = {"error": 0, "warning": 1, "info": 2, "": 3}
+    report.sort(key=lambda x: (sev_order[x[4]], x[0], x[1]))
     stats["report"] = _write_report(Path(report_dir or LOGS_DIR) / f"{batch_id}_report.csv",
-                                    ["id", "result", "status_after", "severity", "check", "message",
+                                    ["id", "gender", "result", "status_after", "severity", "check", "message",
                                      "source", "translation"], report)
     return stats
 
