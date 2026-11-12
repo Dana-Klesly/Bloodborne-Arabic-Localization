@@ -157,7 +157,7 @@ def cmd_migrate(a):
 def cmd_sources_import(a):
     from translation import batch
     with db.open_db(a.db) as conn:
-        _out(batch.import_sources(conn, a.csv))
+        _out(batch.import_sources(conn, a.csv, dry_run=a.dry_run))
 
 
 def cmd_batch_export(a):
@@ -176,8 +176,26 @@ def cmd_batch_import(a):
     from translation import batch
     with db.open_db(a.db) as conn:
         _out(batch.import_batch(conn, a.csv, translator=a.translator,
-                                allow_overwrite_approved=a.allow_overwrite_approved,
-                                overwrite_drafts=a.overwrite_drafts))
+                                overwrite_drafts=a.overwrite_drafts, dry_run=a.dry_run))
+
+
+def cmd_batch_cancel(a):
+    from translation import batch
+    with db.open_db(a.db) as conn:
+        _out(batch.cancel_batch(conn, a.batch_id, a.by, a.reason))
+
+
+def cmd_review_export(a):
+    from validation.review_report import export_review
+    with db.open_db(a.db) as conn:
+        _out(export_review(conn, a.out, statuses=a.status))
+
+
+def _positive_int(value):
+    n = int(value)
+    if n < 1:
+        raise argparse.ArgumentTypeError("must be 1 or more")
+    return n
 
 
 def cmd_batch_list(a):
@@ -239,7 +257,7 @@ def main(argv=None):
     s.add_argument("--by", required=True); s.add_argument("--note")
     s.set_defaults(fn=cmd_gender_split)
 
-    s = sub.add_parser("gender-merge", help="male + female -> one shared translation (history is kept)")
+    s = sub.add_parser("gender-merge", help="TEMPORARILY DISABLED until schema v3 (Rule 9): male + female -> one shared translation")
     s.add_argument("key"); s.add_argument("--keep", required=True, choices=db.GENDERS)
     s.add_argument("--by", required=True); s.add_argument("--note")
     s.set_defaults(fn=cmd_gender_merge)
@@ -277,10 +295,11 @@ def main(argv=None):
 
     s = sub.add_parser("sources-import", help="import English source strings (id, source, context, type)")
     s.add_argument("csv")
+    s.add_argument("--dry-run", action="store_true", help="check and report only; the database is not changed")
     s.set_defaults(fn=cmd_sources_import)
 
     s = sub.add_parser("batch-export", help="write the next batch CSV for the translator")
-    s.add_argument("--limit", type=int, default=40)
+    s.add_argument("--limit", type=_positive_int, default=40)
     s.add_argument("--type", nargs="*", help="dialogue ui item_name item_desc system place")
     s.add_argument("--status", nargs="*", default=["pending"], choices=db.STATUSES)
     s.add_argument("--include-open", action="store_true", help="also include rows already in an open batch")
@@ -289,13 +308,23 @@ def main(argv=None):
     s = sub.add_parser("batch-import", help="import a translated batch CSV (never approves)")
     s.add_argument("csv")
     s.add_argument("--translator", default="ai")
-    s.add_argument("--allow-overwrite-approved", action="store_true",
-                   help="replace approved translations (they go back to review)")
+    s.add_argument("--dry-run", action="store_true", help="check and report only; the database is not changed")
     s.add_argument("--overwrite-drafts", action="store_true",
                    help="replace human draft/needs_review translations")
     s.set_defaults(fn=cmd_batch_import)
 
     sub.add_parser("batch-list", help="list batches and their results").set_defaults(fn=cmd_batch_list)
+
+    s = sub.add_parser("batch-cancel", help="cancel the open rows of an exported batch (nothing is deleted)")
+    s.add_argument("batch_id")
+    s.add_argument("--by", required=True)
+    s.add_argument("--reason")
+    s.set_defaults(fn=cmd_batch_cancel)
+
+    s = sub.add_parser("review-export", help="write a read-only review sheet (CSV) for the human reviewer")
+    s.add_argument("--status", nargs="*", default=["needs_review"], choices=db.STATUSES)
+    s.add_argument("--out", help="default: logs/review_<time>.csv")
+    s.set_defaults(fn=cmd_review_export)
 
     # Windows consoles often default to a non-UTF-8 code page; Arabic output would crash.
     for stream in (sys.stdout, sys.stderr):

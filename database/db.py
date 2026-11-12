@@ -381,7 +381,7 @@ def _set_row_translation(conn, row, text, origin, by, machine_model=None, note=N
     text = _clean(text)
     if text is None and row["gender"] != "shared":
         raise WorkflowError(f"{row['string_key']} ({row['gender']}): a male/female version cannot be emptied; "
-                            f"use gender-merge to go back to one shared translation")
+                            f"going back to one shared translation (gender-merge) is disabled until schema v3")
     if text is None:
         new_status, new_origin = "pending", "none"
     else:
@@ -420,12 +420,16 @@ def mark_for_review(conn, string_key: str, by: str, gender: str | None = None) -
 
 def approve(conn, string_key: str, reviewer: str, blocking_errors: list | None = None,
             gender: str | None = None) -> None:
-    """Approve ONE version. `blocking_errors` = validator errors for this version."""
+    """Approve ONE version. `blocking_errors` = validator errors for this version (font checks
+    included when the caller has a font). If the caller passes none, the validator runs here, so no
+    code path can approve a version that has validator errors."""
     row = resolve(conn, string_key, gender)
     if _is_machine_name(reviewer):
         raise WorkflowError("approval needs the name of a human reviewer")
     if row["status"] != "needs_review":
         raise WorkflowError(f"{_label(row)}: only 'needs_review' can be approved (is {row['status']})")
+    if blocking_errors is None:
+        blocking_errors = _blocking_errors(conn, row["id"])
     if blocking_errors:
         raise WorkflowError(f"{_label(row)}: fix validation errors first: " + "; ".join(blocking_errors))
     _log(conn, row, "approved", row["translation"], row["origin"], reviewer)
@@ -494,42 +498,26 @@ def split_gender(conn, string_key: str, female_text: str, by: str, male_text: st
     return {"male": dict(get_string(conn, string_key, "male")), "female": dict(female)}
 
 
+class MergeDisabled(WorkflowError):
+    """gender-merge is switched off until schema v3 (append-only history, see the approval design)."""
+
+
+MERGE_DISABLED_MESSAGE = (
+    "gender-merge is temporarily disabled (Rule 9: translation history must not be changed or deleted). "
+    "With the current schema, merging would have to move or delete the female version's history records. "
+    "It will return with schema v3, where history is append-only. Nothing was changed. "
+    "Meanwhile a reviewer can edit or reject each version on its own."
+)
+
+
 def merge_gender(conn, string_key: str, keep: str, by: str, note: str | None = None) -> dict:
-    """Turn a male + female pair back into one shared translation (explicit command only).
+    """Turn a male + female pair back into one shared translation: TEMPORARILY DISABLED.
 
-    * keep='male' or 'female' chooses the text that survives
-    * the male row becomes 'shared' and keeps its internal id
-    * nothing historical is lost: the female row's history is moved to the shared row,
-      and the female text is recorded there before the female row is removed
-    * the result goes to 'needs_review' (a human has to look at it again)
+    The schema v2 implementation had to rewrite history rows of the female version (string_id and
+    note), because deleting the female row cascades to its history (ON DELETE CASCADE). That breaks
+    Rule 9. The command refuses before it reads or writes anything; it comes back with schema v3.
     """
-    if keep not in GENDERS:
-        raise WorkflowError("keep must be male or female")
-    male = get_string(conn, string_key, "male")
-    female = get_string(conn, string_key, "female")
-    if conn.execute("SELECT 1 FROM batch_items WHERE string_id=?", (female["id"],)).fetchone():
-        raise WorkflowError(f"{string_key}: female version is referenced by batch records; merge refused")
-    kept = male["translation"] if keep == "male" else female["translation"]
-    merge_note = f"merged male/female into shared, kept {keep}" + (f"; {note}" if note else "")
-
-    conn.execute("INSERT INTO history(string_id, old_status, new_status, old_translation, new_translation,"
-                 " origin, changed_by, note) VALUES (?,?,?,?,?,?,?,?)",
-                 (male["id"], female["status"], None, female["translation"], None, female["origin"], by,
-                  f"female version removed by merge (internal id {female['id']})"))
-    conn.execute("UPDATE history SET string_id=?, note=trim(coalesce(note,'') || ' [moved from female version, id "
-                 + str(female["id"]) + "]') WHERE string_id=?", (male["id"], female["id"]))
-    conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('variant_op', 'merge')")
-    try:
-        conn.execute("DELETE FROM strings WHERE id=?", (female["id"],))
-    finally:
-        conn.execute("DELETE FROM meta WHERE key='variant_op'")
-    conn.execute("UPDATE strings SET gender='shared', updated_at=datetime('now') WHERE id=?", (male["id"],))
-    shared = get_string(conn, string_key)
-    new_origin = male["origin"] if keep == "male" else female["origin"]
-    _log(conn, shared, "needs_review", kept, new_origin, by, merge_note)
-    conn.execute("UPDATE strings SET translation=?, status='needs_review', origin=?, reviewer=NULL,"
-                 " updated_at=datetime('now') WHERE id=?", (kept, new_origin, shared["id"]))
-    return dict(get_string(conn, string_key))
+    raise MergeDisabled(MERGE_DISABLED_MESSAGE)
 
 
 # ---------------------------------------------------------------- active player gender
@@ -558,22 +546,43 @@ def status_counts(conn) -> dict:
 
 
 # ---------------------------------------------------------------- CSV
+def _blocking_errors(conn, row_id: int) -> list[str]:
+    """Validator errors of one version (single-string checks + male/female pair checks)."""
+    from glossary.glossary import from_db
+    from validation.checks import check_string
+    from validation.validator import pair_issues
+    row = conn.execute("SELECT * FROM strings WHERE id=?", (row_id,)).fetchone()
+    issues = check_string(row["source_text"], row["translation"], "draft", row["max_length"],
+                          row["max_line_length"], from_db(conn), gender=row["gender"], category=row["category"])
+    if row["gender"] != "shared":
+        issues += pair_issues(versions(conn, row["string_key"])).get(row_id, [])
+    return [i.message for i in issues if i.severity == "error"]
+
+
 def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
     """Import strings (and optional translations) from a UTF-8 CSV.
 
     * new keys are inserted, existing keys get their source fields updated
     * a translation in the CSV that differs from the DB becomes a 'draft'
       (origin from the 'origin' column, default human)
-    * 'needs_review' in the CSV is honoured; 'approved' is downgraded to 'needs_review'
+    * 'needs_review' in the CSV is honoured only if the validator finds no error in that version;
+      otherwise it stays 'draft' (counted in 'review_blocked'). 'approved' is downgraded to 'needs_review'
+    * an approved version is never changed: a different translation for it is skipped and
+      counted in 'approved_protected' (a reviewer must 'reject' it first)
+    * reviewer / approval columns are never read (listed in 'ignored_columns')
     * optional 'gender' column (shared/male/female) addresses one version of a split
       string; this import never splits or merges strings
     """
     stats = {"inserted": 0, "updated": 0, "source_changed": 0, "unchanged": 0,
-             "translations_set": 0, "approved_downgraded": 0, "skipped": 0, "gender_mismatch": 0}
+             "translations_set": 0, "approved_downgraded": 0, "approved_protected": 0, "review_blocked": 0,
+             "skipped": 0,
+             "gender_mismatch": 0, "ignored_columns": []}
     with open(csv_path, encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         if "string_key" not in (reader.fieldnames or []) or "source_text" not in reader.fieldnames:
             raise ValueError("CSV needs at least the columns string_key and source_text")
+        stats["ignored_columns"] = sorted({"reviewer", "approved_by", "approved_at", "approval_id",
+                                           "signature"} & set(reader.fieldnames))
         for rec in reader:
             key = _clean(rec.get("string_key"))
             source = rec.get("source_text")
@@ -601,6 +610,9 @@ def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
                 row = get_string(conn, key, None if gender == "shared" else gender)
 
             translation = _clean(rec.get("translation"))
+            if translation is not None and translation != row["translation"] and row["status"] == "approved":
+                stats["approved_protected"] += 1
+                continue
             if translation is not None and translation != row["translation"]:
                 origin = (_clean(rec.get("origin")) or "human").lower()
                 origin = origin if origin in ("machine", "human") else "human"
@@ -612,6 +624,9 @@ def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
                 if wanted == "approved":
                     stats["approved_downgraded"] += 1
                     wanted = "needs_review"
+                if wanted == "needs_review" and _blocking_errors(conn, row["id"]):
+                    stats["review_blocked"] += 1          # same rule as batch import: errors stay in draft
+                    wanted = "draft"
                 if wanted == "needs_review":
                     row = conn.execute("SELECT * FROM strings WHERE id=?", (row["id"],)).fetchone()
                     _log(conn, row, "needs_review", row["translation"], row["origin"], who)

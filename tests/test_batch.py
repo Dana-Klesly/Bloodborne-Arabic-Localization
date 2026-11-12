@@ -297,13 +297,29 @@ class ImportTests(BatchTestBase):
         row = db.get_string(self.conn, "demo:ui:rest")
         self.assertEqual((row["status"], row["translation"]), ("approved", "استراحة"))
 
-    def test_approved_overwrite_with_flag_goes_back_to_review(self):
+    def test_approved_is_never_overwritten_by_import(self):
+        # rule 11: there is no import option that replaces an approved translation
         self.do_import(self.fill(self.file))
         self._approve("demo:ui:rest")
+        with self.assertRaises(TypeError):
+            self.do_import(self.fill(self.file, name="x.csv"), allow_overwrite_approved=True)
         second = self.export(statuses=("approved",), limit=40)
         changed = {"demo:ui:rest": "اِسترِح"}
-        stats = self.do_import(self.fill(Path(second["file"]), changed, name="r3.csv"),
-                               allow_overwrite_approved=True)
+        hist = self.conn.execute("SELECT COUNT(*) FROM history").fetchone()[0]
+        stats = self.do_import(self.fill(Path(second["file"]), changed, name="r3.csv"), overwrite_drafts=True)
+        row = db.get_string(self.conn, "demo:ui:rest")
+        self.assertEqual((row["status"], row["translation"], row["reviewer"]), ("approved", "استراحة", "Dana"))
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM history").fetchone()[0], hist)
+        self.assertEqual(stats["approved_by_import"], 0)
+
+    def test_reject_then_reimport_replaces_and_goes_to_review(self):
+        self.do_import(self.fill(self.file))
+        self._approve("demo:ui:rest")
+        db.reject(self.conn, "demo:ui:rest", "Dana", "wording")
+        third = self.export(statuses=("draft",), limit=40)
+        rows = read_csv(third["file"])
+        self.assertEqual({r["id"]: r["current_translation"] for r in rows}["demo:ui:rest"], "استراحة")
+        stats = self.do_import(self.fill(Path(third["file"]), {"demo:ui:rest": "اِسترِح"}, name="r4.csv"))
         row = db.get_string(self.conn, "demo:ui:rest")
         self.assertEqual((row["status"], row["translation"], row["reviewer"]), ("needs_review", "اِسترِح", None))
         self.assertIn("overwrite", {r["check"] for r in read_csv(stats["report"])})
