@@ -354,6 +354,56 @@ class GenericImportTests(Base):
         self.assertEqual((r["status"], r["reviewer"], stats["approved_downgraded"]), ("needs_review", None, 1))
 
 
+class ImportCsvReviewGateTests(Base):
+    """Regression: import_csv used to put a translation with validator errors straight into
+    needs_review when the CSV said so. Errors must keep it in draft, as in batch import."""
+
+    def imp_csv(self, rows):
+        with self.conn() as c:
+            return db.import_csv(c, write_csv(self.dir / "g.csv", rows))
+
+    def review_events(self, key):
+        with self.conn() as c:
+            return c.execute("SELECT COUNT(*) FROM history h JOIN strings s ON s.id = h.string_id "
+                             "WHERE s.string_key=? AND h.new_status='needs_review'", (key,)).fetchone()[0]
+
+    def test_needs_review_with_errors_stays_draft(self):
+        stats = self.imp_csv([{"string_key": REC, "source_text": "You received %s.",
+                               "translation": "تسلّمت شيئاً.", "status": "needs_review"}])   # %s missing
+        self.assertEqual((self.row(REC)["status"], stats["review_blocked"]), ("draft", 1))
+        self.assertEqual(self.review_events(REC), 0)
+
+    def test_approved_with_errors_is_downgraded_then_blocked(self):
+        stats = self.imp_csv([{"string_key": REC, "source_text": "You received %s.",
+                               "translation": "تسلّمت شيئاً.", "status": "approved", "reviewer": "Dana"}])
+        self.assertEqual(self.row(REC)["status"], "draft")
+        self.assertEqual((stats["approved_downgraded"], stats["review_blocked"]), (1, 1))
+
+    def test_clean_needs_review_is_kept(self):
+        stats = self.imp_csv([{"string_key": REC, "source_text": "You received %s.",
+                               "translation": "تسلّمتَ %s.", "status": "needs_review"}])
+        self.assertEqual((self.row(REC)["status"], stats["review_blocked"]), ("needs_review", 0))
+
+    def test_female_version_with_different_codes_stays_draft(self):
+        with self.conn() as c:
+            db.set_translation(c, REC, MALE, "human", "Dana")
+            db.split_gender(c, REC, FEMALE, "Dana")
+        stats = self.imp_csv([{"string_key": REC, "gender": "female", "source_text": "You received %s.",
+                               "translation": "تسلّمتِ شيئاً.", "status": "needs_review"}])
+        self.assertEqual((self.row(REC, "female")["status"], stats["review_blocked"]), ("draft", 1))
+
+    def test_approve_runs_the_validator_when_no_errors_are_passed(self):
+        with self.conn() as c:
+            db.set_translation(c, REC, "تسلّمت شيئاً.", "human", "Dana")
+            c.execute("UPDATE strings SET status='needs_review' WHERE string_key=?", (REC,))   # forced past the gate
+            hist = c.execute("SELECT COUNT(*) FROM history").fetchone()[0]
+            with self.assertRaises(db.WorkflowError) as cm:
+                db.approve(c, REC, "Dana")
+            self.assertIn("validation errors", str(cm.exception))
+            self.assertEqual(c.execute("SELECT COUNT(*) FROM history").fetchone()[0], hist)
+        self.assertEqual((self.row(REC)["status"], self.row(REC)["reviewer"]), ("needs_review", None))
+
+
 # --------------------------------------------------------------------------- review sheet
 class ReviewReportTests(Base):
     def test_sheet_is_read_only_and_complete(self):

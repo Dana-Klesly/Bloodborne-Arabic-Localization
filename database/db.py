@@ -420,12 +420,16 @@ def mark_for_review(conn, string_key: str, by: str, gender: str | None = None) -
 
 def approve(conn, string_key: str, reviewer: str, blocking_errors: list | None = None,
             gender: str | None = None) -> None:
-    """Approve ONE version. `blocking_errors` = validator errors for this version."""
+    """Approve ONE version. `blocking_errors` = validator errors for this version (font checks
+    included when the caller has a font). If the caller passes none, the validator runs here, so no
+    code path can approve a version that has validator errors."""
     row = resolve(conn, string_key, gender)
     if _is_machine_name(reviewer):
         raise WorkflowError("approval needs the name of a human reviewer")
     if row["status"] != "needs_review":
         raise WorkflowError(f"{_label(row)}: only 'needs_review' can be approved (is {row['status']})")
+    if blocking_errors is None:
+        blocking_errors = _blocking_errors(conn, row["id"])
     if blocking_errors:
         raise WorkflowError(f"{_label(row)}: fix validation errors first: " + "; ".join(blocking_errors))
     _log(conn, row, "approved", row["translation"], row["origin"], reviewer)
@@ -558,13 +562,27 @@ def status_counts(conn) -> dict:
 
 
 # ---------------------------------------------------------------- CSV
+def _blocking_errors(conn, row_id: int) -> list[str]:
+    """Validator errors of one version (single-string checks + male/female pair checks)."""
+    from glossary.glossary import from_db
+    from validation.checks import check_string
+    from validation.validator import pair_issues
+    row = conn.execute("SELECT * FROM strings WHERE id=?", (row_id,)).fetchone()
+    issues = check_string(row["source_text"], row["translation"], "draft", row["max_length"],
+                          row["max_line_length"], from_db(conn), gender=row["gender"], category=row["category"])
+    if row["gender"] != "shared":
+        issues += pair_issues(versions(conn, row["string_key"])).get(row_id, [])
+    return [i.message for i in issues if i.severity == "error"]
+
+
 def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
     """Import strings (and optional translations) from a UTF-8 CSV.
 
     * new keys are inserted, existing keys get their source fields updated
     * a translation in the CSV that differs from the DB becomes a 'draft'
       (origin from the 'origin' column, default human)
-    * 'needs_review' in the CSV is honoured; 'approved' is downgraded to 'needs_review'
+    * 'needs_review' in the CSV is honoured only if the validator finds no error in that version;
+      otherwise it stays 'draft' (counted in 'review_blocked'). 'approved' is downgraded to 'needs_review'
     * an approved version is never changed: a different translation for it is skipped and
       counted in 'approved_protected' (a reviewer must 'reject' it first)
     * reviewer / approval columns are never read (listed in 'ignored_columns')
@@ -572,7 +590,8 @@ def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
       string; this import never splits or merges strings
     """
     stats = {"inserted": 0, "updated": 0, "source_changed": 0, "unchanged": 0,
-             "translations_set": 0, "approved_downgraded": 0, "approved_protected": 0, "skipped": 0,
+             "translations_set": 0, "approved_downgraded": 0, "approved_protected": 0, "review_blocked": 0,
+             "skipped": 0,
              "gender_mismatch": 0, "ignored_columns": []}
     with open(csv_path, encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
@@ -621,6 +640,9 @@ def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
                 if wanted == "approved":
                     stats["approved_downgraded"] += 1
                     wanted = "needs_review"
+                if wanted == "needs_review" and _blocking_errors(conn, row["id"]):
+                    stats["review_blocked"] += 1          # same rule as batch import: errors stay in draft
+                    wanted = "draft"
                 if wanted == "needs_review":
                     row = conn.execute("SELECT * FROM strings WHERE id=?", (row["id"],)).fetchone()
                     _log(conn, row, "needs_review", row["translation"], row["origin"], who)
