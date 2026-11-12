@@ -22,7 +22,7 @@ from common.paths import DEFAULT_DB, SCHEMA_FILE, ensure_dir
 
 STATUSES = ("pending", "draft", "needs_review", "approved")
 ORIGINS = ("none", "machine", "human")
-MACHINE_NAMES = {"ollama", "machine", "ai", "llm", "bot", "auto", "claude"}
+MACHINE_NAMES = {"ollama", "machine", "ai", "llm", "bot", "auto"}
 
 CSV_COLUMNS = [
     "string_key", "category", "speaker", "context", "source_text",
@@ -402,7 +402,7 @@ def set_translation(conn, string_key: str, text, origin: str, by: str,
                     gender: str | None = None) -> str:
     """Store a translation. Always results in 'pending' (empty text, shared only) or 'draft'.
 
-    origin='machine' : automatic translation (e.g. a Claude batch). Never anything but draft here.
+    origin='machine' : automatic translation (e.g. an AI batch). Never anything but draft here.
     origin='human'   : a person typed it.
     """
     return _set_row_translation(conn, resolve(conn, string_key, gender), text, origin, by, machine_model, note)

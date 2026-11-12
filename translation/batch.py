@@ -2,7 +2,7 @@
 
   1. import_sources()  English strings  ->  DB (status pending)
   2. export_batch()    pending strings  ->  translation/batches/out/<batch_id>.csv
-  3. (translator, e.g. Claude, fills the 'translation' column, see CLAUDE_TRANSLATOR.md)
+  3. (the translator fills the 'translation' column, see TRANSLATOR.md)
   4. import_batch()    returned CSV     ->  DB
        * every row is checked against the batch record and the source fingerprint
        * translation stored as machine output
@@ -28,7 +28,7 @@ from validation.validator import duplicate_issues, pair_issues
 BATCH_OUT = TRANSLATION_DIR / "batches" / "out"
 BATCH_IN = TRANSLATION_DIR / "batches" / "in"
 DEFAULT_BATCH_SIZE = 40
-MACHINE_MODEL = "claude"
+MACHINE_MODEL = "ai"
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_.:/\-]+$")
 TYPES = {

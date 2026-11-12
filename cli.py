@@ -288,7 +288,7 @@ def main(argv=None):
 
     s = sub.add_parser("batch-import", help="import a translated batch CSV (never approves)")
     s.add_argument("csv")
-    s.add_argument("--translator", default="claude")
+    s.add_argument("--translator", default="ai")
     s.add_argument("--allow-overwrite-approved", action="store_true",
                    help="replace approved translations (they go back to review)")
     s.add_argument("--overwrite-drafts", action="store_true",

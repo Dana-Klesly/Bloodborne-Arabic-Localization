@@ -34,7 +34,7 @@ def make_v1(path: Path) -> None:
         INSERT INTO history(string_id, old_status, new_status, old_translation, new_translation, origin, changed_by)
           VALUES (7, 'pending', 'draft', NULL, 'استراحة', 'human', 'Dana'),
                  (7, 'needs_review', 'approved', 'استراحة', 'استراحة', 'human', 'Dana'),
-                 (8, 'pending', 'draft', NULL, 'حصلت على %s.', 'machine', 'claude');
+                 (8, 'pending', 'draft', NULL, 'حصلت على %s.', 'machine', 'ai');
         INSERT INTO glossary(term_en, approved_ar, variants_ar, status) VALUES ('Hunter', 'الصياد', 'صياد', 'proposed');
         INSERT INTO batches(batch_id, row_count) VALUES ('batch_1', 2);
         INSERT INTO batch_items(batch_id, string_id, string_key, source_hash)

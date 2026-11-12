@@ -178,7 +178,7 @@ class WorkflowTests(GenderBase):
 
     def test_machine_cannot_approve_any_version(self):
         db.mark_for_review(self.conn, RECEIVED, "x", gender="female")
-        for name in ("claude", "Claude", "ollama", "machine", " "):
+        for name in ("ai", "AI", "ollama", "machine", " "):
             with self.assertRaises(db.WorkflowError):
                 db.approve(self.conn, RECEIVED, name, gender="female")
         self.assertEqual(self.rows()["female"]["status"], "needs_review")
@@ -283,7 +283,7 @@ class CliTests(GenderBase):
         self.assertIn("--gender", msg)
         self.assertEqual(self.run_cli("review", RECEIVED, "--by", "Dana", "--gender", "male")[0], 0)
         self.assertEqual(self.run_cli("approve", RECEIVED, "--reviewer", "Dana", "--gender", "male")[0], 0)
-        self.assertEqual(self.run_cli("approve", RECEIVED, "--reviewer", "claude", "--gender", "female")[0], 2)
+        self.assertEqual(self.run_cli("approve", RECEIVED, "--reviewer", "ai", "--gender", "female")[0], 2)
         code, shown = self.run_cli("show", RECEIVED)
         self.assertEqual(code, 0)
         self.assertIn(MALE, shown)

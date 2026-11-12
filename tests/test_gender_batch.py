@@ -112,7 +112,7 @@ class ImportSplitTests(Base):
         self.assertEqual((v["male"]["translation"], v["female"]["translation"]), (MALE, FEMALE))
         self.assertEqual((v["male"]["status"], v["female"]["status"]), ("needs_review", "needs_review"))
         self.assertEqual((v["male"]["origin"], v["female"]["origin"]), ("machine", "machine"))
-        self.assertEqual(v["female"]["machine_model"], "claude")
+        self.assertEqual(v["female"]["machine_model"], batch.MACHINE_MODEL)
         self.assertEqual(set(self.v(PIL)), {"shared"}, "pilgrim stays shared")
         self.assertEqual(self.v(PIL)["shared"]["translation"], BASE_TR[PIL])
         self.assertEqual((stats["split"], stats["accepted_review"], stats["approved_by_import"]), (1, 20, 0))

@@ -1,6 +1,6 @@
 # GitHub connection test
 
-هذا الملف أُنشئ لاختبار اتصال Claude بمستودع GitHub (إنشاء فرع، Commit، Push).
+هذا الملف أُنشئ لاختبار الاتصال بمستودع GitHub (إنشاء فرع، Commit، Push).
 
 - **الفرع:** `test/github-connection`
 - **تاريخ ووقت الاختبار:** 2026-11-11 21:02 (Europe/Berlin, UTC+01:00)

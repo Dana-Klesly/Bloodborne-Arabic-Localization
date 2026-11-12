@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS glossary (
     female_variants_ar TEXT    -- (v2) other accepted female forms, separated by |
 );
 
--- Translation batches sent to a translator (Claude) as CSV and imported back.
+-- Translation batches sent to a translator as CSV and imported back.
 -- source_hash = fingerprint of the English source at export time; an import whose
 -- source no longer matches is rejected (stale or edited batch).
 CREATE TABLE IF NOT EXISTS batches (
