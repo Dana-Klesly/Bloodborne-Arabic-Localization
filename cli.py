@@ -154,6 +154,31 @@ def cmd_migrate(a):
     _out(report)
 
 
+def cmd_text(a):
+    with db.open_db(a.db) as conn:
+        r = db.text_for(conn, a.key, a.gender)
+        _out({"string_key": r["string_key"], "player_gender": a.gender or db.get_active_gender(conn),
+              "version": r["gender"], "status": r["status"], "translation": r["translation"]})
+
+
+def cmd_export_set(a):
+    from common.paths import LOGS_DIR, ensure_dir
+    with db.open_db(a.db) as conn:
+        gender = a.gender or db.get_active_gender(conn)
+        rows = db.text_set(conn, gender)
+    out = Path(a.out) if a.out else LOGS_DIR / f"text_set_{gender}.csv"
+    ensure_dir(out.parent)
+    import csv
+    with open(out, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["string_key", "version", "status", "translation", "source_text"])
+        for r in rows:
+            w.writerow([r["string_key"], r["gender"], r["status"], r["translation"] or "", r["source_text"]])
+    _out({"player_gender": gender, "strings": len(rows),
+          "split_strings_used": sum(1 for r in rows if r["gender"] != "shared"),
+          "not_approved": sum(1 for r in rows if r["status"] != "approved"), "file": str(out)})
+
+
 def cmd_sources_import(a):
     from translation import batch
     with db.open_db(a.db) as conn:
@@ -243,6 +268,15 @@ def main(argv=None):
     s.add_argument("key"); s.add_argument("--keep", required=True, choices=db.GENDERS)
     s.add_argument("--by", required=True); s.add_argument("--note")
     s.set_defaults(fn=cmd_gender_merge)
+
+    s = sub.add_parser("text", help="show one string as the player sees it (active gender by default)")
+    s.add_argument("key"); s.add_argument("--gender", choices=db.GENDERS)
+    s.set_defaults(fn=cmd_text)
+
+    s = sub.add_parser("export-set", help="write the full text set for one player gender (read-only)")
+    s.add_argument("--gender", choices=db.GENDERS, help="default: the active gender")
+    s.add_argument("--out", help="default: logs/text_set_<gender>.csv")
+    s.set_defaults(fn=cmd_export_set)
 
     s = sub.add_parser("select-gender", help="show or set the active player gender (male/female)")
     s.add_argument("gender", nargs="?", choices=db.GENDERS)
