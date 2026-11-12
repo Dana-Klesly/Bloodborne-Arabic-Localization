@@ -533,6 +533,27 @@ def set_active_gender(conn, gender: str) -> str:
     return gender
 
 
+def text_set(conn, gender: str | None = None) -> list[sqlite3.Row]:
+    """The text a player of `gender` sees: every string_key exactly once.
+
+    shared strings -> the shared row; split strings -> the male or female row.
+    gender=None uses the active gender (error if none is selected). Read-only.
+    """
+    gender = gender or get_active_gender(conn)
+    if gender not in GENDERS:
+        raise WorkflowError("no player gender selected; run: cli.py select-gender male|female (or pass --gender)")
+    return conn.execute("SELECT * FROM strings WHERE gender = 'shared' OR gender = ? ORDER BY string_key",
+                        (gender,)).fetchall()
+
+
+def text_for(conn, string_key: str, gender: str | None = None) -> sqlite3.Row:
+    """One string as a player of `gender` (default: the active gender) sees it. Read-only."""
+    gender = gender or get_active_gender(conn)
+    if gender not in GENDERS:
+        raise WorkflowError("no player gender selected; run: cli.py select-gender male|female (or pass --gender)")
+    return get_string(conn, string_key, gender) if is_gendered(conn, string_key) else get_string(conn, string_key)
+
+
 def status_counts(conn) -> dict:
     counts = {s: 0 for s in STATUSES}
     for r in conn.execute("SELECT status, COUNT(*) n FROM strings GROUP BY status"):
