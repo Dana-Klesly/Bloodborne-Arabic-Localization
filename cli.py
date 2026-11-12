@@ -257,7 +257,7 @@ def main(argv=None):
     s.add_argument("--by", required=True); s.add_argument("--note")
     s.set_defaults(fn=cmd_gender_split)
 
-    s = sub.add_parser("gender-merge", help="male + female -> one shared translation (history is kept)")
+    s = sub.add_parser("gender-merge", help="TEMPORARILY DISABLED until schema v3 (Rule 9): male + female -> one shared translation")
     s.add_argument("key"); s.add_argument("--keep", required=True, choices=db.GENDERS)
     s.add_argument("--by", required=True); s.add_argument("--note")
     s.set_defaults(fn=cmd_gender_merge)

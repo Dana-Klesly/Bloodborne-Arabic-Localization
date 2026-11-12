@@ -381,7 +381,7 @@ def _set_row_translation(conn, row, text, origin, by, machine_model=None, note=N
     text = _clean(text)
     if text is None and row["gender"] != "shared":
         raise WorkflowError(f"{row['string_key']} ({row['gender']}): a male/female version cannot be emptied; "
-                            f"use gender-merge to go back to one shared translation")
+                            f"going back to one shared translation (gender-merge) is disabled until schema v3")
     if text is None:
         new_status, new_origin = "pending", "none"
     else:
@@ -498,42 +498,26 @@ def split_gender(conn, string_key: str, female_text: str, by: str, male_text: st
     return {"male": dict(get_string(conn, string_key, "male")), "female": dict(female)}
 
 
+class MergeDisabled(WorkflowError):
+    """gender-merge is switched off until schema v3 (append-only history, see the approval design)."""
+
+
+MERGE_DISABLED_MESSAGE = (
+    "gender-merge is temporarily disabled (Rule 9: translation history must not be changed or deleted). "
+    "With the current schema, merging would have to move or delete the female version's history records. "
+    "It will return with schema v3, where history is append-only. Nothing was changed. "
+    "Meanwhile a reviewer can edit or reject each version on its own."
+)
+
+
 def merge_gender(conn, string_key: str, keep: str, by: str, note: str | None = None) -> dict:
-    """Turn a male + female pair back into one shared translation (explicit command only).
+    """Turn a male + female pair back into one shared translation: TEMPORARILY DISABLED.
 
-    * keep='male' or 'female' chooses the text that survives
-    * the male row becomes 'shared' and keeps its internal id
-    * nothing historical is lost: the female row's history is moved to the shared row,
-      and the female text is recorded there before the female row is removed
-    * the result goes to 'needs_review' (a human has to look at it again)
+    The schema v2 implementation had to rewrite history rows of the female version (string_id and
+    note), because deleting the female row cascades to its history (ON DELETE CASCADE). That breaks
+    Rule 9. The command refuses before it reads or writes anything; it comes back with schema v3.
     """
-    if keep not in GENDERS:
-        raise WorkflowError("keep must be male or female")
-    male = get_string(conn, string_key, "male")
-    female = get_string(conn, string_key, "female")
-    if conn.execute("SELECT 1 FROM batch_items WHERE string_id=?", (female["id"],)).fetchone():
-        raise WorkflowError(f"{string_key}: female version is referenced by batch records; merge refused")
-    kept = male["translation"] if keep == "male" else female["translation"]
-    merge_note = f"merged male/female into shared, kept {keep}" + (f"; {note}" if note else "")
-
-    conn.execute("INSERT INTO history(string_id, old_status, new_status, old_translation, new_translation,"
-                 " origin, changed_by, note) VALUES (?,?,?,?,?,?,?,?)",
-                 (male["id"], female["status"], None, female["translation"], None, female["origin"], by,
-                  f"female version removed by merge (internal id {female['id']})"))
-    conn.execute("UPDATE history SET string_id=?, note=trim(coalesce(note,'') || ' [moved from female version, id "
-                 + str(female["id"]) + "]') WHERE string_id=?", (male["id"], female["id"]))
-    conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('variant_op', 'merge')")
-    try:
-        conn.execute("DELETE FROM strings WHERE id=?", (female["id"],))
-    finally:
-        conn.execute("DELETE FROM meta WHERE key='variant_op'")
-    conn.execute("UPDATE strings SET gender='shared', updated_at=datetime('now') WHERE id=?", (male["id"],))
-    shared = get_string(conn, string_key)
-    new_origin = male["origin"] if keep == "male" else female["origin"]
-    _log(conn, shared, "needs_review", kept, new_origin, by, merge_note)
-    conn.execute("UPDATE strings SET translation=?, status='needs_review', origin=?, reviewer=NULL,"
-                 " updated_at=datetime('now') WHERE id=?", (kept, new_origin, shared["id"]))
-    return dict(get_string(conn, string_key))
+    raise MergeDisabled(MERGE_DISABLED_MESSAGE)
 
 
 # ---------------------------------------------------------------- active player gender

@@ -109,32 +109,46 @@ class SplitTests(GenderBase):
 
 
 class MergeTests(GenderBase):
-    def test_merge_keeps_chosen_text_and_all_history(self):
+    """gender-merge is disabled until schema v3 (Rule 9): it must refuse before touching anything."""
+
+    def dump(self):
+        self.conn.commit()
+        return list(self.conn.iterdump())
+
+    def test_merge_is_disabled_and_changes_nothing(self):
         self.split()
-        male_id, female_id = self.rows()["male"]["id"], self.rows()["female"]["id"]
-        total_before = self.conn.execute("SELECT COUNT(*) FROM history").fetchone()[0]
-        db.merge_gender(self.conn, RECEIVED, "female", "Dana")
+        db.mark_for_review(self.conn, RECEIVED, "Dana", gender="female")
+        db.approve(self.conn, RECEIVED, "Dana", gender="female")
+        db.mark_for_review(self.conn, RECEIVED, "Dana", gender="male")
+        female_id = self.rows()["female"]["id"]
+        self.assertTrue(self.history(female_id), "the female version has history of its own")
+        before = self.dump()
+        for keep in ("male", "female"):
+            with self.assertRaises(db.MergeDisabled) as cm:
+                db.merge_gender(self.conn, RECEIVED, keep, "Dana", note="try")
+            self.assertIn("Rule 9", str(cm.exception))
+            self.assertIn("Nothing was changed", str(cm.exception))
+        self.assertEqual(self.dump(), before, "every table identical, history included")
         r = self.rows()
-        self.assertEqual(set(r), {"shared"})
-        self.assertEqual(r["shared"]["id"], male_id)
-        self.assertEqual((r["shared"]["translation"], r["shared"]["status"]), (FEMALE, "needs_review"))
-        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM history WHERE string_id=?", (female_id,)).fetchone()[0], 0)
-        total_after = self.conn.execute("SELECT COUNT(*) FROM history").fetchone()[0]
-        self.assertEqual(total_after, total_before + 2, "no history row lost: +1 removal record, +1 merge")
-        notes = " ".join(h["note"] or "" for h in self.history(male_id))
-        self.assertIn("moved from female version", notes)
-        removed = [h for h in self.history(male_id) if (h["note"] or "").startswith("female version removed")]
-        self.assertEqual(removed[0]["old_translation"], FEMALE, "female text kept in history")
+        self.assertEqual(set(r), {"male", "female"})
+        self.assertEqual((r["female"]["status"], r["female"]["reviewer"]), ("approved", "Dana"))
         self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM meta WHERE key='variant_op'").fetchone()[0], 0)
         self.healthy()
 
-    def test_merge_refusals(self):
-        with self.assertRaises(KeyError):
-            db.merge_gender(self.conn, RECEIVED, "male", "Dana")          # not split
-        self.split()
-        with self.assertRaises(db.WorkflowError):
-            db.merge_gender(self.conn, RECEIVED, "neutral", "Dana")
-        self.assertEqual(set(self.rows()), {"male", "female"})
+    def test_merge_refuses_first_whatever_the_input(self):
+        before = self.dump()
+        for key, keep in ((RECEIVED, "male"), ("no:such:key", "male"), (RECEIVED, "neutral")):
+            with self.assertRaises(db.MergeDisabled):
+                db.merge_gender(self.conn, key, keep, "Dana")
+        self.assertEqual(self.dump(), before)
+        self.assertTrue(issubclass(db.MergeDisabled, db.WorkflowError))
+
+    def test_merge_code_cannot_write(self):
+        import inspect
+        src = inspect.getsource(db.merge_gender)
+        body = src.split('"""', 2)[2]                       # code after the docstring
+        for word in ("execute", "UPDATE", "DELETE", "INSERT", "conn."):
+            self.assertNotIn(word, body)
 
     def test_female_cannot_be_deleted_outside_merge(self):
         self.split()
@@ -219,7 +233,8 @@ class ActiveGenderTests(GenderBase):
         self.conn.commit()
         db.init_db(self.conn)
         self.split()
-        db.merge_gender(self.conn, RECEIVED, "male", "Dana")
+        with self.assertRaises(db.MergeDisabled):
+            db.merge_gender(self.conn, RECEIVED, "male", "Dana")
         out = self.dir / "e.csv"
         db.export_csv(self.conn, out)
         db.import_csv(self.conn, out)
@@ -288,7 +303,11 @@ class CliTests(GenderBase):
         self.assertEqual(code, 0)
         self.assertIn(MALE, shown)
         self.assertIn(FEMALE, shown)
-        self.assertEqual(self.run_cli("gender-merge", RECEIVED, "--keep", "male", "--by", "Dana")[0], 0)
+        code, msg = self.run_cli("gender-merge", RECEIVED, "--keep", "male", "--by", "Dana")
+        self.assertEqual(code, 2, "refused with the normal error exit code")
+        self.assertIn("temporarily disabled", msg)
+        self.assertIn("Rule 9", msg)
+        self.assertEqual(set(self.rows()), {"male", "female"})
 
     def test_select_gender_and_status(self):
         code, out = self.run_cli("select-gender")

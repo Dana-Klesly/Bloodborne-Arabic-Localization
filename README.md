@@ -57,12 +57,12 @@ pending ──(ترجمة)──> draft ──(review)──> needs_review ─�
 .venv\Scripts\python cli.py gender-split demo:system:received --male "تسلّمتَ %s." --female "تسلّمتِ %s." --by Dana
 .venv\Scripts\python cli.py review demo:system:received --gender female --by Dana
 .venv\Scripts\python cli.py approve demo:system:received --gender female --reviewer Dana
-.venv\Scripts\python cli.py gender-merge demo:system:received --keep male --by Dana
 .venv\Scripts\python cli.py select-gender female
 ```
 - النص اللي إله نسختين، أي أمر عليه بدون `--gender` بينرفض.
 - بالدفعات، عمود `translation_female` هو اللي بيعمل التقسيم. الشرح كامل بـ `translation/TRANSLATOR.md`.
 - الجنس النشط بينحفظ بقاعدة البيانات، وما بيتغير إلا بأمر `select-gender`.
+- `gender-merge` (رجعة النسختين لترجمة وحدة) **معطّل مؤقتاً** لحد المخطط v3، لأنو كان بيعدّل سجل التاريخ (القاعدة 9). الأمر بيرفض قبل ما يلمس قاعدة البيانات.
 
 ### دفعات الترجمة
 

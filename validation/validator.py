@@ -61,7 +61,7 @@ def pair_issues(rows) -> dict[int, list[Issue]]:
     rows must contain ALL versions of the keys to check.
       * a male version without a female one (or the reverse)        -> error
       * different placeholders/codes in the two versions             -> error
-      * identical texts (after removing invisible differences)       -> warning, consider gender-merge
+      * identical texts (after removing invisible differences)       -> warning (merging them waits for schema v3)
       * texts that differ only in diacritics                         -> info; allowed, never merged
     """
     by_key = defaultdict(dict)
@@ -86,7 +86,7 @@ def pair_issues(rows) -> dict[int, list[Issue]]:
         if pm and pm == pf:
             for r in (m, f):
                 out[r["id"]].append(Issue("warning", "variants_identical",
-                                          "male and female versions are identical; consider gender-merge"))
+                                          "male and female versions are identical (merging them back is disabled until schema v3)"))
         elif pm and HARAKAT.sub("", pm) == HARAKAT.sub("", pf):
             for r in (m, f):
                 out[r["id"]].append(Issue("info", "variants_diacritics_only",

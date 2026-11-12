@@ -404,6 +404,71 @@ class ImportCsvReviewGateTests(Base):
         self.assertEqual((self.row(REC)["status"], self.row(REC)["reviewer"]), ("needs_review", None))
 
 
+# --------------------------------------------------------------------------- gender-merge disabled (rule 9)
+class MergeDisabledFileTests(Base):
+    """The database FILE is byte-identical after a refused gender-merge, through the CLI too."""
+
+    def setUp(self):
+        super().setUp()
+        with self.conn() as c:
+            db.set_translation(c, REC, MALE, "human", "Dana")
+            db.split_gender(c, REC, FEMALE, "Dana")
+            for g in ("male", "female"):
+                db.mark_for_review(c, REC, "Dana", gender=g)
+            db.approve(c, REC, "Dana", gender="female")
+            db.reject(c, REC, "Dana", "wording", gender="male")          # history on both versions
+
+    def cli(self, *args):
+        import cli
+        err = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            code = cli.main(["--db", str(self.path), *args])
+        return code, err.getvalue()
+
+    def test_cli_refuses_and_file_is_identical(self):
+        with self.conn() as c:
+            rows_before = [tuple(r) for r in c.execute("SELECT * FROM strings ORDER BY id")]
+            hist_before = [tuple(r) for r in c.execute("SELECT * FROM history ORDER BY id")]
+            fid = db.get_string(c, REC, "female")["id"]
+            self.assertTrue(c.execute("SELECT COUNT(*) FROM history WHERE string_id=?", (fid,)).fetchone()[0])
+        before = file_sha(self.path)
+        for keep in ("male", "female"):
+            code, err = self.cli("gender-merge", REC, "--keep", keep, "--by", "Dana")
+            self.assertEqual(code, 2)
+            self.assertIn("gender-merge is temporarily disabled", err)
+            self.assertIn("Nothing was changed", err)
+        self.assertEqual(file_sha(self.path), before, "database file byte-identical")
+        with self.conn() as c:
+            self.assertEqual([tuple(r) for r in c.execute("SELECT * FROM strings ORDER BY id")], rows_before)
+            self.assertEqual([tuple(r) for r in c.execute("SELECT * FROM history ORDER BY id")], hist_before)
+            self.assertEqual(c.execute("PRAGMA foreign_key_check").fetchall(), [])
+
+    def test_other_gender_commands_still_work(self):
+        code, _ = self.cli("select-gender", "female")
+        self.assertEqual(code, 0)
+        code, _ = self.cli("show", REC)
+        self.assertEqual(code, 0)
+        code, _ = self.cli("gender-split", "demo:system:door_locked", "--male", "مقفلٌ عليك.", "--female",
+                           "مقفلٌ عليكِ.", "--by", "Dana")
+        self.assertEqual(code, 0)
+        with self.conn() as c:
+            self.assertEqual(len(db.versions(c, "demo:system:door_locked")), 2)
+
+
+class NoHistoryRewriteStaticTests(unittest.TestCase):
+    def test_application_code_never_updates_or_deletes_history(self):
+        from tests.helpers import ROOT
+        offenders = []
+        for p in ROOT.rglob("*.py"):
+            if "tests" in p.relative_to(ROOT).parts or ".venv" in p.parts:
+                continue
+            text = p.read_text(encoding="utf-8").upper()
+            for bad in ("UPDATE HISTORY", "DELETE FROM HISTORY", "DELETE FROM STRINGS"):
+                if bad in text:
+                    offenders.append(f"{p.relative_to(ROOT)}: {bad}")
+        self.assertEqual(offenders, [], "history may only grow; strings rows are never deleted (cascade)")
+
+
 # --------------------------------------------------------------------------- review sheet
 class ReviewReportTests(Base):
     def test_sheet_is_read_only_and_complete(self):
