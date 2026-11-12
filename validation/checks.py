@@ -12,6 +12,9 @@ from common import arabic as ar
 from common.placeholders import compare_tokens, strip_tokens
 
 LENGTH_RATIO_WARNING = 1.8   # Arabic noticeably longer than English with no known limit
+# Provisional character limits per text type, used ONLY when a string has no max_length of its own.
+# They are guesses until the real limits of the game's UI are known, so they only warn (never block).
+TYPE_LENGTH_HINTS = {"ui": 24, "item_name": 40, "place": 40, "system": 120}
 LATIN_PUNCT = {",": "،", ";": "؛", "?": "؟"}
 
 
@@ -104,6 +107,15 @@ def check_length(source: str, translation: str, max_length, max_line_length) -> 
     return issues
 
 
+def check_type_length(translation: str, category, max_length) -> list[Issue]:
+    """Warning when a string without its own max_length is longer than the provisional hint for its type."""
+    hint = TYPE_LENGTH_HINTS.get(category or "")
+    if max_length is not None or hint is None or len(translation) <= hint:
+        return []
+    return [_w("length_type", f"{len(translation)} characters; {category} texts should stay within about {hint} "
+                              f"(provisional hint, no max_length set for this string)")]
+
+
 # ------------------------------------------------------------------ unicode / arabic script
 def check_unicode(translation: str) -> list[Issue]:
     issues = []
@@ -163,7 +175,7 @@ def check_font_coverage(translation: str, cmap: set[int]) -> list[Issue]:
 
 
 def check_string(source: str, translation, status: str, max_length=None, max_line_length=None,
-                 terms=None, cmap=None, gender: str = "shared") -> list[Issue]:
+                 terms=None, cmap=None, gender: str = "shared", category=None) -> list[Issue]:
     """Run every single-string check (on one version: shared, male or female)."""
     issues = check_empty(source, translation, status)
     if not translation or not translation.strip():
@@ -172,6 +184,7 @@ def check_string(source: str, translation, status: str, max_length=None, max_lin
     if terms:
         issues += check_glossary(source or "", translation, terms, gender)
     issues += check_length(source or "", translation, max_length, max_line_length)
+    issues += check_type_length(translation, category, max_length)
     issues += check_unicode(translation)
     if cmap is not None:
         issues += check_font_coverage(translation, cmap)

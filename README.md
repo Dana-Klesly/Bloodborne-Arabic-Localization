@@ -57,24 +57,31 @@ pending ──(ترجمة)──> draft ──(review)──> needs_review ─�
 .venv\Scripts\python cli.py gender-split demo:system:received --male "تسلّمتَ %s." --female "تسلّمتِ %s." --by Dana
 .venv\Scripts\python cli.py review demo:system:received --gender female --by Dana
 .venv\Scripts\python cli.py approve demo:system:received --gender female --reviewer Dana
-.venv\Scripts\python cli.py gender-merge demo:system:received --keep male --by Dana
 .venv\Scripts\python cli.py select-gender female
 ```
 - النص اللي إله نسختين، أي أمر عليه بدون `--gender` بينرفض.
 - بالدفعات، عمود `translation_female` هو اللي بيعمل التقسيم. الشرح كامل بـ `translation/TRANSLATOR.md`.
 - الجنس النشط بينحفظ بقاعدة البيانات، وما بيتغير إلا بأمر `select-gender`.
+- `gender-merge` (رجعة النسختين لترجمة وحدة) **معطّل مؤقتاً** لحد المخطط v3، لأنو كان بيعدّل سجل التاريخ (القاعدة 9). الأمر بيرفض قبل ما يلمس قاعدة البيانات.
 
 ### دفعات الترجمة
 
 ```
+.venv\Scripts\python cli.py sources-import my_texts.csv --dry-run
 .venv\Scripts\python cli.py sources-import my_texts.csv
-.venv\Scripts\python cli.py batch-export --limit 40
+.venv\Scripts\python cli.py batch-export --limit 20
+.venv\Scripts\python cli.py batch-import translation\batches\in\batch_XXXX.csv --dry-run
 .venv\Scripts\python cli.py batch-import translation\batches\in\batch_XXXX.csv
+.venv\Scripts\python cli.py review-export
 .venv\Scripts\python cli.py batch-list
+.venv\Scripts\python cli.py batch-cancel batch_XXXX --by Dana --reason "file lost"
 ```
-ملف الدفعة بيطلع بـ `translation\batches\out\`، ومنرجّعه مترجم لـ `translation\batches\in\`. التفاصيل بـ `translation/README.md`، وتعليمات المترجم بـ `translation/TRANSLATOR.md`.
+- ملف الدفعة بيطلع بـ `translation\batches\out\`، ومنرجّعه مترجم لـ `translation\batches\in\`. التفاصيل بـ `translation/README.md`، وتعليمات المترجم بـ `translation/TRANSLATOR.md`.
+- `--dry-run` بيفحص وبيكتب التقرير بس، وقاعدة البيانات بتضل متل ما هي.
+- الاستيراد ما بيعتمد شي، وما بيغيّر نص معتمد أبداً. لتغيير نص معتمد، المراجع بيعمل `reject` أول.
+- `review-export` بيكتب ورقة مراجعة CSV للقراءة بس. الاعتماد بيضل نص نص بأمر `approve`.
 
-الاختبارات: `powershell -ExecutionPolicy Bypass -File tools\run_tests.ps1`
+الاختبارات: `powershell -ExecutionPolicy Bypass -File tools\run_tests.ps1`. بتشغّل `tools\run_tests_isolated.py`، وهو بيتأكد إنو الاختبارات ما غيّرت `logs\` ولا `translation\batches\` ولا `backups\` ولا `database\`، وإنها نضّفت ملفاتها المؤقتة.
 
 ## قواعد المشروع
 

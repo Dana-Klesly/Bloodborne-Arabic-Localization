@@ -1,4 +1,6 @@
 # Runs all project tests with the project venv and saves the output to logs\tests_log.txt
+# The tests run through tools\run_tests_isolated.py, which also checks that the real logs\,
+# translation\batches\, backups\ and database\ folders were not changed and that temp files were cleaned up.
 # Works in Windows PowerShell 5.1 and PowerShell 7.
 #
 # Why the test run is wrapped below: Python's unittest writes its results to stderr.
@@ -20,7 +22,7 @@ $lines = New-Object System.Collections.Generic.List[string]
 $code = 1
 $ErrorActionPreference = "Continue"                          # stderr lines must not abort the run
 try {
-    & $py -m unittest discover -s tests -t . -v 2>&1 | ForEach-Object {
+    & $py (Join-Path $root "tools\run_tests_isolated.py") 2>&1 | ForEach-Object {
         if ($_ -is [System.Management.Automation.ErrorRecord]) {
             # stderr line: take its text; PS 5.1 reports an empty line as "...RemoteException"
             $line = $_.Exception.Message
@@ -40,5 +42,7 @@ $lines | Out-File -FilePath $log -Encoding utf8
 
 $summary = $lines | Where-Object { $_ -match '^Ran \d+ tests? in' } | Select-Object -Last 1
 if ($code -eq 0) { Write-Host "`nALL TESTS PASSED ($summary) - log: logs\tests_log.txt" -ForegroundColor Green }
+elseif ($code -eq 3) { Write-Host "`nREAL PROJECT FILES CHANGED DURING THE TESTS (exit code 3) - see logs\tests_log.txt" -ForegroundColor Red }
+elseif ($code -eq 4) { Write-Host "`nTESTS LEFT TEMPORARY FILES BEHIND (exit code 4) - see logs\tests_log.txt" -ForegroundColor Red }
 else { Write-Host "`nSOME TESTS FAILED (exit code $code) - see logs\tests_log.txt" -ForegroundColor Red }
 exit $code
