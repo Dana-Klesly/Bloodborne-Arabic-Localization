@@ -322,6 +322,17 @@ class ImportTests(BatchTestBase):
         with self.assertRaises(db.WorkflowError):
             db.approve(self.conn, "demo:ui:rest", "ai")
 
+    def test_legacy_machine_name_cannot_approve(self):
+        # the old default machine-translator name must stay blocked as a reviewer
+        self.do_import(self.fill(self.file))
+        self.assertEqual(self.status("demo:ui:rest"), "needs_review")
+        for name in ("claude", "Claude", " CLAUDE "):
+            with self.assertRaises(db.WorkflowError):
+                db.approve(self.conn, "demo:ui:rest", name)
+        self.assertEqual(self.status("demo:ui:rest"), "needs_review")
+        self.assertEqual(db.status_counts(self.conn)["approved"], 0)
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM history WHERE new_status = 'approved'").fetchone()[0], 0)
+
     def test_list_batches(self):
         self.do_import(self.fill(self.file))
         info = batch.list_batches(self.conn)

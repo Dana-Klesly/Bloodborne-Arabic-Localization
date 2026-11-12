@@ -22,7 +22,8 @@ from common.paths import DEFAULT_DB, SCHEMA_FILE, ensure_dir
 
 STATUSES = ("pending", "draft", "needs_review", "approved")
 ORIGINS = ("none", "machine", "human")
-MACHINE_NAMES = {"ollama", "machine", "ai", "llm", "bot", "auto"}
+# names that may never act as a human reviewer (includes legacy machine-translator names)
+MACHINE_NAMES = {"ollama", "machine", "ai", "llm", "bot", "auto", "claude"}
 
 CSV_COLUMNS = [
     "string_key", "category", "speaker", "context", "source_text",
