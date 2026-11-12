@@ -565,15 +565,21 @@ def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
     * a translation in the CSV that differs from the DB becomes a 'draft'
       (origin from the 'origin' column, default human)
     * 'needs_review' in the CSV is honoured; 'approved' is downgraded to 'needs_review'
+    * an approved version is never changed: a different translation for it is skipped and
+      counted in 'approved_protected' (a reviewer must 'reject' it first)
+    * reviewer / approval columns are never read (listed in 'ignored_columns')
     * optional 'gender' column (shared/male/female) addresses one version of a split
       string; this import never splits or merges strings
     """
     stats = {"inserted": 0, "updated": 0, "source_changed": 0, "unchanged": 0,
-             "translations_set": 0, "approved_downgraded": 0, "skipped": 0, "gender_mismatch": 0}
+             "translations_set": 0, "approved_downgraded": 0, "approved_protected": 0, "skipped": 0,
+             "gender_mismatch": 0, "ignored_columns": []}
     with open(csv_path, encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         if "string_key" not in (reader.fieldnames or []) or "source_text" not in reader.fieldnames:
             raise ValueError("CSV needs at least the columns string_key and source_text")
+        stats["ignored_columns"] = sorted({"reviewer", "approved_by", "approved_at", "approval_id",
+                                           "signature"} & set(reader.fieldnames))
         for rec in reader:
             key = _clean(rec.get("string_key"))
             source = rec.get("source_text")
@@ -601,6 +607,9 @@ def import_csv(conn, csv_path: Path | str, by: str = "csv-import") -> dict:
                 row = get_string(conn, key, None if gender == "shared" else gender)
 
             translation = _clean(rec.get("translation"))
+            if translation is not None and translation != row["translation"] and row["status"] == "approved":
+                stats["approved_protected"] += 1
+                continue
             if translation is not None and translation != row["translation"]:
                 origin = (_clean(rec.get("origin")) or "human").lower()
                 origin = origin if origin in ("machine", "human") else "human"

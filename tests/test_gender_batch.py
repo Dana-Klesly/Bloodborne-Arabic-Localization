@@ -176,9 +176,10 @@ class ImportSplitTests(Base):
         self.assertEqual(set(self.v()), {"shared"})
         self.assertEqual(self.v()["shared"]["status"], "approved")
         self.healthy()
-        third = self.export(statuses=("approved",), limit=40, include_open=True)
-        self.imp(self.fill(third["file"], tr={REC: MALE}, female={REC: FEMALE}, name="r3.csv"),
-                 allow_overwrite_approved=True)
+        db.reject(self.conn, REC, "Dana", "needs a female version")    # a human takes the approval back first
+        self.approved_expected = 0
+        third = self.export(statuses=("draft",), limit=40, include_open=True)
+        self.imp(self.fill(third["file"], tr={REC: MALE}, female={REC: FEMALE}, name="r3.csv"))
         v = self.v()
         self.assertEqual((v["male"]["status"], v["male"]["reviewer"]), ("needs_review", None))
         self.approved_expected = 0

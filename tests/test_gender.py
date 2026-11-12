@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.helpers import ROOT  # noqa: F401  (sets sys.path)
+from tests.helpers import ROOT, read_csv  # noqa: F401  (ROOT sets sys.path)
 from database import db
 
 RECEIVED = "demo:system:received"
@@ -231,7 +231,7 @@ class CsvTests(GenderBase):
         self.split()
         out = self.dir / "e.csv"
         n = db.export_csv(self.conn, out)
-        rows = list(csv.DictReader(open(out, encoding="utf-8-sig", newline="")))
+        rows = read_csv(out)
         self.assertEqual(n, 3)
         got = {(r["string_key"], r["gender"]): r["translation"] for r in rows}
         self.assertEqual(got[(RECEIVED, "male")], MALE)
@@ -376,7 +376,7 @@ class ValidationTests(GenderBase):
         from validation import validator
         self.split()
         rep = validator.run(self.conn, report_dir=self.dir)["report"]
-        rows = list(csv.DictReader(open(rep, encoding="utf-8-sig", newline="")))
+        rows = read_csv(rep)
         self.assertIn("gender", rows[0])
         self.assertIn("female", {r["gender"] for r in rows})
 
@@ -405,7 +405,7 @@ class GlossaryFemaleTests(unittest.TestCase):
     def test_csv_with_and_without_female_columns_and_db_roundtrip(self):
         from common.paths import GLOSSARY_CSV
         from glossary.glossary import from_db, load_into_db, read_csv
-        self.assertTrue(read_csv(GLOSSARY_CSV), "current glossary.csv (no female columns) still loads")
+        self.assertTrue(read_csv(GLOSSARY_CSV), "the project glossary.csv loads")
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "g.csv"
             with open(p, "w", encoding="utf-8", newline="") as f:

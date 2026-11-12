@@ -96,8 +96,9 @@ def pair_issues(rows) -> dict[int, list[Issue]]:
 
 def validate_row(row, terms, cmap=None) -> list[Issue]:
     gender = row["gender"] if "gender" in row.keys() else "shared"
+    category = row["category"] if "category" in row.keys() else None
     return check_string(row["source_text"], row["translation"], row["status"],
-                        row["max_length"], row["max_line_length"], terms, cmap, gender=gender)
+                        row["max_length"], row["max_line_length"], terms, cmap, gender=gender, category=category)
 
 
 def errors_for(conn, string_key: str, font_path=None, gender=None) -> list[str]:
@@ -110,7 +111,7 @@ def errors_for(conn, string_key: str, font_path=None, gender=None) -> list[str]:
     return [i.message for i in issues if i.severity == "error"]
 
 
-def run(conn, font_path=None, statuses=None, report_dir: Path = LOGS_DIR) -> dict:
+def run(conn, font_path=None, statuses=None, report_dir: Path | None = None) -> dict:
     terms = from_db(conn)
     cmap = load_cmap(font_path) if font_path else None
     sql = "SELECT * FROM strings"
@@ -151,6 +152,7 @@ def run(conn, font_path=None, statuses=None, report_dir: Path = LOGS_DIR) -> dic
     summary["strings_with_errors"] = sum(
         1 for issues in per_row.values() if any(i.severity == "error" for i in issues))
 
+    report_dir = report_dir or LOGS_DIR          # resolved at call time (tests point LOGS_DIR elsewhere)
     ensure_dir(report_dir)
     stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     csv_path = Path(report_dir) / f"validation_{stamp}.csv"
