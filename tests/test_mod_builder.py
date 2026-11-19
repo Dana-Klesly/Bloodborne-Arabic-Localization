@@ -64,5 +64,18 @@ class ShapeTests(unittest.TestCase):
             swf_font.add_glyphs(f, {65: (shape, 1)})
 
 
+class FillSourcesTests(unittest.TestCase):
+    def test_arabic_only_rows_get_english_from_the_game(self):
+        from mod_builder.build_test_mod import fill_sources
+        refs = {"item": {10: ([(0, 5, 5)], {5: "Blood Vial"})}, "menu": {}}
+        rows = [{"id": "bb:engus:item_name:bnd10:5", "source_file": "CUSA03173/dvdroot_ps4/msg/engus/item.msgbnd.dcx",
+                 "bnd_entry_id": "10", "entry_id": "5", "translation": "قارورة الدم"},
+                {"id": "bb:engus:item_name:bnd10:6", "source_file": "CUSA03173/dvdroot_ps4/msg/engus/item.msgbnd.dcx",
+                 "bnd_entry_id": "10", "entry_id": "6", "translation": "x"}]
+        fill_sources(rows, refs)
+        self.assertEqual(rows[0]["source"], "Blood Vial")
+        self.assertEqual(rows[1]["source"], "")  # not in the game: the build then skips it
+
+
 if __name__ == "__main__":
     unittest.main()

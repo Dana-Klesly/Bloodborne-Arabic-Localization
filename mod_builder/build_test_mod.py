@@ -68,6 +68,25 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def fill_sources(rows, refs) -> None:
+    """The Arabic-only draft (translation/arabic_player_draft_ar.csv, the one in git) has no
+    English column: take each row's English from the player's own game files."""
+    for r in rows:
+        if r.get("source") is None:
+            try:
+                fmg = refs[archive_name(r["source_file"])][int(r["bnd_entry_id"])]
+                r["source"] = fmg[1].get(int(r["entry_id"])) if isinstance(fmg, tuple) else fmg.get(int(r["entry_id"]))
+            except (KeyError, ValueError):
+                r["source"] = None
+            if r["source"] is None:
+                r["source"] = ""
+
+
+def default_draft() -> Path:
+    full = ROOT / "translation" / "arabic_player_draft.csv"
+    return full if full.is_file() else ROOT / "translation" / "arabic_player_draft_ar.csv"
+
+
 def load_draft(path: Path) -> list[dict]:
     with open(path, encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
@@ -330,7 +349,9 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--game", type=Path, default=ROOT / "game" / "CUSA03173" / "dvdroot_ps4",
                    help="original dvdroot_ps4 (read only)")
-    p.add_argument("--draft", type=Path, default=ROOT / "translation" / "arabic_player_draft.csv")
+    p.add_argument("--draft", type=Path, default=None,
+                   help="draft CSV; default: translation/arabic_player_draft.csv if present, else the "
+                        "Arabic-only translation/arabic_player_draft_ar.csv")
     p.add_argument("--font", type=Path, required=True, help="TrueType Arabic font (glyf outlines)")
     p.add_argument("--font-license", type=Path, help="licence file copied next to the mod's font")
     p.add_argument("--out", type=Path, default=ROOT / "mod_builder" / "output")
@@ -345,6 +366,7 @@ def main(argv=None) -> int:
     p.add_argument("--locales", default="engus,enggb", help="text folders to write (same ids, same font)")
     p.add_argument("--strip-harakat", action="store_true", help="drop harakat in the DISPLAY copy only")
     a = p.parse_args(argv)
+    a.draft = a.draft or default_draft()
     if a.extras and not a.extras.is_file():
         a.extras = None
 
@@ -357,6 +379,7 @@ def main(argv=None) -> int:
     rows = load_draft(a.draft)
     issues: list[tuple[str, str, str]] = []
     refs = {arc: read_archive(game / "msg" / LOCALE / f"{arc}.msgbnd.dcx")[1] for arc in ARCHIVES}
+    fill_sources(rows, refs)
     plan, stats = plan_rows(rows, refs, issues, a.strip_harakat)
     extras = load_extras(a.extras)
     locales = [x.strip() for x in a.locales.split(",") if x.strip()]

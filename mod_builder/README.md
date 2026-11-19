@@ -30,6 +30,10 @@ in the CSV stay as they are.
 
 ## Use
 
+The translation in git is `translation/arabic_player_draft_ar.csv`: ids and Arabic only, no
+English game text. The build takes each row's English from the player's own game files. If the
+full local draft `translation/arabic_player_draft.csv` exists, it is used instead (same result).
+
 Needs `fonttools`, `arabic-reshaper`, `python-bidi` in the venv, the game files under `game/`
 (not in git), and an Arabic TrueType font in `fonts/` (not in git; `fonts/OFL-Amiri.txt` is its
 licence). Start the game once through bbport first so `out/` holds its text layers.
