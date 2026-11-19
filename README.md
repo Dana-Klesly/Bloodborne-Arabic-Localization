@@ -1,195 +1,191 @@
-# 🩸 Bloodborne — Arabic Localization
+# Bloodborne Arabic Localization | تعريب Bloodborne
 
-<p align="center">
-  **Community Arabic Localization for Bloodborne (bbport)**
-  <br>
-  A fan-made Arabic localization project bringing the world of Yharnam closer to Arabic-speaking players.
-</p>
+An unofficial community-made Arabic localization project for **Bloodborne (v1.09)** on Windows using bbport.
 
-<p align="center">
-  <a href="https://ko-fi.com/danakle">
-    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support the project on Ko-fi" />
-  </a>
-</p>
+مشروع تعريب عربي غير رسمي للعبة **Bloodborne (الإصدار 1.09)** على Windows باستخدام bbport.
 
 ---
 
 ## 🇬🇧 English
 
-### About the Project
+### About
 
-Bloodborne Arabic Localization is a community-driven project that aims to make Bloodborne accessible to Arabic-speaking players through an Arabic in-game text experience.
+Bloodborne Arabic Localization is a fan-made project that aims to make Bloodborne more accessible to Arabic-speaking players.
 
-The project focuses on preserving the game's dark atmosphere while providing clear, natural Arabic translations.
+The project introduces Arabic translations while preserving the atmosphere, tone, and dark identity of the original game.
 
-This is an unofficial fan-made localization for the **bbport Windows version**.
+This is an experimental community localization, and feedback from players is always welcome.
 
-### 🎮 Installation Guide
+### Download
 
-#### Requirements
+**Mod download:**  
+[ADD THE RELEASE DOWNLOAD LINK HERE]
 
-- Bloodborne version **1.09**.
-- A working Windows installation of **bbport**.
-- The ready-to-use `BloodborneArabic_test` mod folder.
+The mod is distributed separately from the original game files.
 
-#### Installation Steps
+### Installation
 
-1. Download the ready-to-use Arabic mod.
-2. Open your bbport installation directory.
-3. Locate the `mods` folder. If it does not exist, create it.
-4. Copy the entire `BloodborneArabic_test` folder into `mods`.
-5. Open `Play Bloodborne.exe`.
-6. Go to **Mods & patches** and make sure `BloodborneArabic_test` is enabled.
-7. Open **Game & effects**.
-8. Set **Text language** to `English`.
+**Requirements**
+- A legally obtained copy of Bloodborne (v1.09).
+- The Windows version of bbport.
+- The ready-to-use Arabic localization mod folder downloaded from the release.
 
-   **Important:** The mod replaces the `engus` and `enggb` text layers. The launcher's language setting does not affect the in-game text.
+**Steps**
 
+1. Download the Arabic localization mod.
+2. Extract the downloaded archive if necessary.
+3. Open your bbport Windows folder.
+4. Locate the `mods` folder. If it does not exist, create one.
+5. Copy the complete Arabic mod folder into `mods`.
+6. Launch `Play Bloodborne.exe`.
+7. Open **Mods & Patches** and make sure the Arabic mod is enabled.
+8. Go to **Game & Effects** and set **Text Language** to **English**.
 9. Launch the game and enjoy!
 
-### 🗑️ Uninstallation
+**Important:** The mod replaces the English text files, so the in-game text language must remain set to English. The launcher language setting does not affect the mod.
+
+### Uninstallation
 
 To remove the Arabic localization:
 
-- Disable the mod from **Mods & patches**, or
-- Remove the `BloodborneArabic_test` folder from the `mods` directory.
+1. Open bbport.
+2. Disable the Arabic mod under **Mods & Patches**, or close the launcher and remove the mod folder from `mods`.
+3. Launch the game again.
 
-The original game files are not modified by the mod.
+The mod does not overwrite the original game files.
 
-### 🔧 Troubleshooting
+### Troubleshooting
 
 **The game still displays English text:**
-- Close the game completely and launch it again.
-- Make sure the mod is enabled.
-- Confirm that **Text language** is set to `English`.
+- Make sure the Arabic mod is enabled.
+- Make sure **Text Language** is set to English.
+- Close the game completely and restart it after changing the settings.
 
-**The mod does not appear in bbport:**
-- Make sure the mod folder is placed directly inside `mods`.
-- Confirm that the folder was copied completely.
+**The mod is not working after a bbport update:**
 
-**After updating bbport:**
-- A new compatible mod build may be required because the localization is built on top of bbport's text layers.
+The mod is designed for specific bbport text layers. Compatibility may need to be updated after a new bbport release.
 
-### ⚠️ Current Limitations
+### Known Limitations
 
-Some content may remain in English:
-
-- SuperMedo server messages.
-- Text rendered as images.
-- Text not yet included in the current translation draft.
+Some text may remain in English, including:
+- Certain server messages.
+- Text displayed as images rather than normal game text.
+- Some unfinished or untranslated strings.
 - Certain technical names and numbers in bbport menus.
 
-### 📌 Project Notes
+### Project Status
 
-- This is an experimental release.
-- Translations are currently considered drafts and have not all received final human approval.
-- The game engine's Scaleform interface does not natively support Arabic. The mod includes the necessary Arabic font characters and text shaping/direction processing.
-- The mod is intended for use with the specified bbport version.
+This is an experimental fan-made localization. Translations and in-game presentation may continue to improve through testing and community feedback.
 
-### ☕ Support the Project
+If you encounter a translation issue, visual problem, or untranslated text, please share it with us.
 
-If you enjoy this localization and would like to support its continued development, you can buy me a coffee.
+### Credits & Support
 
-Your support is completely optional. The localization remains free for everyone.
+Created with care for the Bloodborne community.
 
-<p align="center">
-  <a href="https://ko-fi.com/danakle">
-    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" />
-  </a>
-</p>
+Arabic font: **Amiri**.
 
-Thank you for supporting independent fan projects! ❤️
+If you enjoy the project and would like to support its development:
+
+[Support me on Ko-fi](https://ko-fi.com/danakle)
+
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/danakle)
+
+### Disclaimer
+
+Bloodborne is a trademark of its respective owners. This is an unofficial fan-made project and is not affiliated with or endorsed by the game's developers or publishers.
+
+The original game files are not included or distributed with this project.
 
 ---
 
 ## 🇸🇦 العربية
 
-### نبذة عن المشروع
+### عن المشروع
 
-مشروع تعريب مجتمعي للعبة **Bloodborne**، يهدف إلى إتاحة تجربة عربية للاعبين الناطقين باللغة العربية، مع الحفاظ على الأجواء القاتمة والغامضة للعالم الأصلي وأسلوبه الأدبي.
+مشروع **Bloodborne Arabic Localization** هو مشروع تعريب غير رسمي من صنع أحد المعجبين، هدفه إتاحة تجربة Bloodborne للاعبين الناطقين باللغة العربية.
 
-هذا التعريب إصدار غير رسمي من صنع المجتمع، ومخصص لنسخة **bbport على Windows**.
+يقدّم المشروع ترجمة عربية لنصوص اللعبة مع محاولة الحفاظ على أجوائها القاتمة وأسلوبها الأدبي وهويتها الأصلية.
 
-### 🎮 طريقة التركيب
+المود تجريبي حالياً، وملاحظات اللاعبين واقتراحاتهم مرحّب فيها دائماً.
 
-#### المتطلبات
+### التحميل
 
-- لعبة Bloodborne إصدار **1.09**.
-- نسخة Windows تعمل من **bbport**.
-- مجلد المود العربي الجاهز `BloodborneArabic_test`.
+**رابط تحميل المود:**  
+[أضيفي رابط إصدار المود هنا]
 
-#### خطوات التثبيت
+يتم توزيع المود بشكل منفصل عن ملفات اللعبة الأصلية.
 
-1. حمّل مجلد التعريب الجاهز.
-2. افتح مجلد تثبيت bbport على جهازك.
-3. ابحث عن مجلد `mods`. إذا لم يكن موجوداً، أنشئه.
-4. انسخ مجلد `BloodborneArabic_test` بالكامل إلى داخل `mods`.
-5. افتح `Play Bloodborne.exe`.
-6. انتقل إلى **Mods & patches** وتأكد من تفعيل `BloodborneArabic_test`.
-7. افتح **Game & effects**.
-8. اضبط خيار **Text language** على `English`.
+### طريقة التثبيت
 
-   **مهم:** يستبدل المود طبقات النصوص `engus` و`enggb`، لذلك يجب اختيار اللغة الإنجليزية. أما خيار لغة المشغّل `Launcher language` فلا يؤثر على نصوص اللعبة.
+**المتطلبات**
+- نسخة أصلية من لعبة Bloodborne الإصدار 1.09.
+- نسخة bbport الخاصة بنظام Windows.
+- مجلد مود التعريب الجاهز للاستخدام، بعد تنزيله من صفحة الإصدار.
 
-9. شغّل اللعبة واستمتع بالتعريب!
+**خطوات التثبيت**
 
-### 🗑️ إزالة التعريب
+1. حمّل مود التعريب.
+2. فك ضغط الملف إذا كان مضغوطاً.
+3. افتح مجلد bbport على جهازك.
+4. ابحث عن مجلد `mods`. إذا لم يكن موجوداً، أنشئ مجلداً جديداً بهذا الاسم.
+5. انسخ مجلد مود التعريب بالكامل إلى داخل `mods`.
+6. شغّل `Play Bloodborne.exe`.
+7. افتح **Mods & Patches** وتأكد من تفعيل مود التعريب.
+8. انتقل إلى **Game & Effects** واجعل خيار **Text Language** على **English**.
+9. شغّل اللعبة واستمتع بالتجربة!
 
-لإزالة المود يمكنك:
+**ملاحظة مهمة:** المود يستبدل النصوص الإنجليزية، لذلك يجب إبقاء لغة النصوص داخل اللعبة على English. لغة واجهة المشغّل (Launcher) لا تؤثر على عمل المود.
 
-- تعطيله من صفحة **Mods & patches**.
-- أو إخراج مجلد `BloodborneArabic_test` من مجلد `mods`.
+### إزالة التعريب
 
-لا يقوم المود بتعديل ملفات اللعبة الأصلية.
+إذا أردت إزالة المود والعودة إلى النصوص الأصلية:
 
-### 🔧 حل المشكلات الشائعة
+1. افتح bbport.
+2. عطّل مود التعريب من **Mods & Patches**، أو أغلق المشغّل واحذف مجلد المود من داخل `mods`.
+3. شغّل اللعبة مجدداً.
+
+المود لا يستبدل ملفات اللعبة الأصلية ولا يعدّلها.
+
+### حل المشكلات
 
 **إذا بقيت النصوص باللغة الإنجليزية:**
-- أغلق اللعبة بالكامل ثم أعد تشغيلها.
-- تأكد من تفعيل المود.
-- تأكد من ضبط **Text language** على `English`.
+- تأكد من تفعيل مود التعريب.
+- تأكد أن خيار **Text Language** مضبوط على English.
+- أغلق اللعبة بالكامل ثم أعد تشغيلها بعد تغيير الإعدادات.
 
-**إذا لم يظهر المود في قائمة bbport:**
-- تأكد من وضع مجلد المود مباشرة داخل `mods`.
-- تأكد من نسخ المجلد كاملاً.
+**إذا توقف المود عن العمل بعد تحديث bbport:**
 
-**بعد تحديث bbport:**
-- قد تحتاج إلى إصدار جديد من المود، لأنه مبني على طبقات النصوص الخاصة بـ bbport.
+المود مصمم ليتوافق مع طبقات النصوص الخاصة بإصدار معيّن من bbport، وقد يحتاج إلى تحديث لضمان التوافق مع الإصدارات الجديدة.
 
-### ⚠️ حدود النسخة الحالية
+### المشاكل المعروفة
 
 قد تبقى بعض النصوص باللغة الإنجليزية، ومنها:
-
-- رسائل سيرفر SuperMedo.
-- النصوص المرسومة كصور داخل اللعبة.
-- النصوص التي لم تُدرج بعد ضمن مسودة الترجمة الحالية.
+- بعض رسائل السيرفر.
+- النصوص التي تظهر على شكل صور بدلاً من نصوص اللعبة العادية.
+- بعض العبارات التي لم تكتمل ترجمتها بعد.
 - بعض الأسماء التقنية والأرقام في قوائم bbport.
 
-### 📌 ملاحظات حول المشروع
+### حالة المشروع
 
-- هذا إصدار تجريبي من التعريب.
-- الترجمات الحالية ما زالت مسودات، ولم تحصل جميعها على الاعتماد البشري النهائي.
-- واجهة اللعبة المبنية على محرك Scaleform لا تدعم العربية افتراضياً؛ لذلك يتضمن المود دعم محارف الخط العربي ومعالجة تشكيل الحروف واتجاه النص.
-- المود مخصص للاستخدام مع إصدار bbport المحدد.
+هذا مشروع تعريب تجريبي من صنع أحد المعجبين، وقد تستمر الترجمة والتحسينات البصرية بالتطور بناءً على الاختبارات وملاحظات المجتمع.
 
-### ☕ ادعم استمرار المشروع
+إذا صادفت خطأ بالترجمة أو مشكلة في عرض النصوص أو عبارة غير معرّبة، شاركنا ملاحظاتك.
 
-إذا أعجبك التعريب وأردت المساهمة في استمرار تطويره وتحسينه، يمكنك دعمي عبر Ko-fi.
+### الشكر والدعم
 
-الدعم اختياري بالكامل، وسيبقى التعريب متاحاً للجميع مجاناً.
+تم إنشاء هذا المشروع بكل حب لمجتمع Bloodborne.
 
-<p align="center">
-  <a href="https://ko-fi.com/danakle">
-    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ادعمني عبر Ko-fi" />
-  </a>
-</p>
+الخط العربي المستخدم: **Amiri**.
 
-شكراً لكل من يدعم مشاريع التعريب المستقلة! ❤️
+إذا أعجبك المشروع وحابب تدعم استمراره وتطويره:
 
----
+[ادعمني عبر Ko-fi](https://ko-fi.com/danakle)
 
-<p align="center">
-  **Fear the Old Blood.**
-  <br>
-  <sub>Bloodborne Arabic Localization — Community Project</sub>
-</p>
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/danakle)
+
+### إخلاء المسؤولية
+
+Bloodborne علامة تجارية مملوكة لأصحاب الحقوق المعنيين. هذا المشروع غير رسمي ومن صنع أحد المعجبين، ولا تربطه أي شراكة أو موافقة رسمية بمطوري اللعبة أو ناشريها.
+
+لا يتضمن المشروع ملفات اللعبة الأصلية ولا يعيد توزيعها.
