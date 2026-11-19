@@ -1,0 +1,176 @@
+﻿archive,fmg,entry_id,source,translation,status,translator_note
+menu,30,10010790,"Be reborn for 5 Insight? Your attributes and level return to your origin's, keeping what your equipped weapons need. Regain your levels without Blood Echoes, now or later with Channel Blood Echoes. Leaving without regaining a level cancels the rebirth.",هل تريد أن تولد من جديد مقابل 5 بصيرة؟ تعود صفاتك ومستواك إلى ما كانت عليه في نشأتك، مع الإبقاء على ما تحتاجه أسلحتك المجهّزة. استعد مستوياتك دون أصداء الدم، الآن أو لاحقاً عبر تحويل أصداء الدم إلى قوة. المغادرة دون استعادة أي مستوى تلغي الولادة الجديدة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,30,10010791,Rebirth requires 5 Insight.,تتطلب الولادة الجديدة 5 بصيرة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,30,10010792,Your attributes are already those of your origin.,صفاتك مطابقة بالفعل لصفات نشأتك.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,30,15000170,Rebirth,الولادة الجديدة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,110006,Quit to Desktop,الخروج إلى سطح المكتب,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119001,PC Graphics,رسوميات الحاسوب,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119002,PC Effects,تأثيرات الحاسوب,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119003,PC Options,خيارات الحاسوب,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119009,Restart Game,إعادة تشغيل اللعبة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119010,Upscaler,تقنية رفع الدقة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119011,Upscaler Quality,جودة رفع الدقة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119012,Sharpness,الحدّة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119013,Frame Generation,توليد الإطارات,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119014,Generated Frames,الإطارات المولّدة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119015,Output Resolution,دقة العرض,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119016,Frame Rate,معدل الإطارات,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119017,Frame Cap,حد الإطارات,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119018,Model Detail,تفاصيل النماذج,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119019,Ambient Occlusion,الإظلال المحيطي,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119020,Dynamic Shadows,الظلال الديناميكية,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119021,Reflections,الانعكاسات,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119022,Anti-Aliasing,تنعيم الحواف,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119023,Motion Blur,ضبابية الحركة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119024,Depth of Field,عمق الميدان,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119025,Chromatic Aberration,الزيغ اللوني,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119026,Field of View,مجال الرؤية,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119027,Camera Distance,بُعد الكاميرا,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119028,Auto Camera Rotation,دوران الكاميرا التلقائي,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119029,HUD Position,موضع واجهة اللعب,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119030,FPS Counter,عدّاد الإطارات,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119031,Button Prompts,أيقونات الأزرار,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119032,Mute in Background,كتم الصوت في الخلفية,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119033,Skip Intro,تخطي المقدمة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119034,Restart Game,إعادة تشغيل اللعبة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119100,Off,إيقاف,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119101,FSR 3.1,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119102,FSR 4,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119103,FSR 4.1.1,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119104,TAA,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119105,DLSS,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119110,Native,أصلية,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119111,Quality,الجودة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119112,Balanced,متوازن,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119113,Performance,الأداء,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119114,Ultra Performance,أداء فائق,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119120,Off,إيقاف,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119121,0.1,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119122,0.2,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119123,0.3,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119124,0.4,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119125,0.5,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119126,0.6,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119127,0.7,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119128,0.8,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119129,0.9,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119130,1.0,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119131,1.5,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119132,2.0,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119140,Off,إيقاف,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119141,FSR 3.1,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119142,DLSS,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119143,AMD ML,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119150,2x,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119151,3x,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119152,4x,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119160,1280 x 720,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119161,1920 x 1080,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119162,2560 x 1440,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119163,3840 x 2160,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119164,2560 x 1080 (21:9),,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119165,3440 x 1440 (21:9),,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119166,3840 x 1600 (21:9),,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119167,5120 x 2160 (21:9),,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119168,3840 x 1080 (32:9),,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119169,5120 x 1440 (32:9),,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119180,30 FPS,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119181,60 FPS,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119182,90 FPS,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119183,Unlocked,غير محدود,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119190,"Auto (display, max 120)",تلقائي (حسب الشاشة، 120 كحد أقصى),draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119191,60,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119192,90,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119193,120,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119194,144,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119195,165,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119196,240,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119197,No limit,بلا حد,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119200,30,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119201,35,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119202,40,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119203,43 (default),43 (افتراضي),draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119204,45,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119205,50,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119206,55,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119207,60,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119208,65,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119209,70,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119210,75,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119211,80,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119212,85,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119213,90,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119220,Highest,الأعلى,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119221,High,مرتفع,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119222,Default,افتراضي,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119223,Low,منخفض,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119224,Lowest,الأدنى,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119230,0% (16:9),0% (16:9),draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119231,10%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119232,20%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119233,30%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119234,40%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119235,50%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119236,60%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119237,70%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119238,80%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119239,90%,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119240,100% (edges),100% (الأطراف),draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119250,Auto,تلقائي,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119251,PlayStation,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119252,Keyboard & Mouse,لوحة المفاتيح والفأرة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,119253,Xbox,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119254,Switch,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119260,-,,keep_source,رقم/اسم تقني — يبقى كما هو
+menu,200,119261,Restart Now,إعادة التشغيل الآن,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,200,401307,Quit to Desktop,الخروج إلى سطح المكتب,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,110006,Save and close the game.,حفظ اللعبة وإغلاقها.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119001,"Upscaling, frame generation, resolution and frame rate.",رفع الدقة وتوليد الإطارات والدقة ومعدل الإطارات.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119002,"Model detail, shadows, reflections and post-processing effects.",تفاصيل النماذج والظلال والانعكاسات وتأثيرات المعالجة اللاحقة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119003,"Camera, HUD, button prompts and other PC options.",الكاميرا وواجهة اللعب وأيقونات الأزرار وخيارات أخرى للحاسوب.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119009,Restarts the game to apply the changes marked for restart.,يعيد تشغيل اللعبة لتطبيق التغييرات المعلّمة بأنها تتطلب إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119010,Smooths edges and rebuilds detail at the output resolution.,ينعّم الحواف ويعيد بناء التفاصيل بدقة العرض.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119011,"Scene resolution: Native is sharpest, Performance is fastest.",دقة المشهد: الأصلية هي الأوضح، والأداء هو الأسرع.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119012,Sharpens the upscaled image.,يزيد حدّة الصورة بعد رفع دقتها.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119013,Adds generated frames between the game's frames.,يضيف إطارات مولّدة بين إطارات اللعبة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119014,Frames shown per game frame (DLSS on RTX 50 up to 4x).,عدد الإطارات المعروضة لكل إطار من اللعبة (DLSS على RTX 50 حتى 4x).,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119015,Final image size. Ultrawide sizes apply after restart.,الحجم النهائي للصورة. المقاسات العريضة تُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119016,The game's frame rate. Applies after restart.,معدل إطارات اللعبة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119017,Limit of the unlocked frame rate. Applies after restart.,حد معدل الإطارات غير المحدود. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119018,Detail of distant models. Applies after restart.,تفاصيل النماذج البعيدة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119019,Contact shadows in corners. Applies after restart.,ظلال التلامس في الزوايا. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119020,Shadows of moving lights. Applies after restart.,ظلال الأضواء المتحركة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119021,Screen-space reflections on wet ground. Applies after restart.,انعكاسات على الأرض المبتلة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119022,The game's own edge smoothing. Applies after restart.,تنعيم الحواف الخاص باللعبة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119023,Blurs fast movement. Applies after restart.,يضبّب الحركة السريعة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119024,Blurs what is out of focus. Applies after restart.,يضبّب ما هو خارج التركيز. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119025,Colour fringes at the screen edges. Applies after restart.,حواف ملوّنة عند أطراف الشاشة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119026,Camera field of view in degrees. Applies after restart.,مجال رؤية الكاميرا بالدرجات. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119027,Places the camera further back. Applies after restart.,يُبعد الكاميرا إلى الخلف. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119028,Camera turns by itself while moving. Applies after restart.,تدور الكاميرا تلقائياً أثناء الحركة. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119029,Ultrawide: moves the HUD toward the edges. Applies after restart.,للشاشات العريضة: ينقل واجهة اللعب نحو الأطراف. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119030,Shows the frame rate in a corner of the screen.,يعرض معدل الإطارات في زاوية الشاشة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119031,Which buttons the game shows.,أي أزرار تعرضها اللعبة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119032,Silences the game while another window is active.,يكتم صوت اللعبة عندما تكون نافذة أخرى نشطة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119033,Skips the logos and opening movie. Applies after restart.,يتخطى الشعارات والمشهد الافتتاحي. يُطبَّق بعد إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,119034,Restarts the game now to apply the changes marked for restart.,يعيد تشغيل اللعبة الآن لتطبيق التغييرات المعلّمة بأنها تتطلب إعادة التشغيل.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,201,401307,Close the game.,إغلاق اللعبة.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,204,110005,Quit the game and return to the desktop?,هل تريد إنهاء اللعبة والعودة إلى سطح المكتب؟,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+menu,204,119009,"Restart the game now
+to apply the changes?","هل تريد إعادة تشغيل اللعبة الآن
+لتطبيق التغييرات؟",draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,10,4016,Hunt Bell,جرس الصيد,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,10,4121,Kin Bell,جرس الأقارب,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,10,4313,Duel Bell,جرس المبارزة,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,10,11201,Bloodlust Bell,جرس التعطش للدم,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,10,11251,Parting Blank,ورقة الفراق,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,20,4016,Seamless co-op bell. Outside it: put back as the Beckoning Bell.,جرس للعب التعاوني السلس. خارجه: يعود جرس الاستدعاء.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,20,4121,Seamless co-op bell. Outside it: put back as the Small Resonant Bell.,جرس للعب التعاوني السلس. خارجه: يعود جرس الرنين الصغير.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,20,4313,Works only in SuperMedo Seamless co-op.,يعمل فقط في اللعب التعاوني السلس من SuperMedo.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,20,11201,Seamless co-op bell. Outside it: put back as the Sinister Resonant Bell.,جرس للعب التعاوني السلس. خارجه: يعود جرس الرنين المشؤوم.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,20,11251,Seamless co-op item. Outside it: put back as the Silencing Blank.,غرض للعب التعاوني السلس. خارجه: يعود ورقة إنهاء التعاون.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,24,4016,BBSC's bell for SuperMedo Seamless co-op. Ring it there to call other players into your game.,جرس BBSC للعب التعاوني السلس من SuperMedo. اقرعه هناك لاستدعاء لاعبين آخرين إلى لعبتك.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,24,4121,BBSC's bell for SuperMedo Seamless co-op. Ring it there to join another player's game.,جرس BBSC للعب التعاوني السلس من SuperMedo. اقرعه هناك للانضمام إلى لعبة لاعب آخر.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,24,4313,"BBSC's bell for SuperMedo Seamless co-op: rung there while hunting together, it turns on PvP between the players, and rung again turns it off. It does nothing outside Seamless co-op.",جرس BBSC للعب التعاوني السلس من SuperMedo: إذا قُرع هناك أثناء الصيد معاً، يفعّل القتال بين اللاعبين، وإذا قُرع مجدداً يوقفه. لا يفعل شيئاً خارج اللعب التعاوني السلس.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,24,11201,BBSC's bell for SuperMedo Seamless co-op. Ring it there to invade another player's world.,جرس BBSC للعب التعاوني السلس من SuperMedo. اقرعه هناك لغزو عالم لاعب آخر.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
+item,24,11251,BBSC's blank for SuperMedo Seamless co-op. Use it there to end co-op.,ورقة BBSC للعب التعاوني السلس من SuperMedo. استخدمها هناك لإنهاء التعاون.,draft,مسودة من Claude لنصوص bbport الإضافية — تحتاج مراجعة
