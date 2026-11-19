@@ -1,95 +1,195 @@
-# Bloodborne-Arabic-Localization
+# 🩸 Bloodborne — Arabic Localization
 
-مشروع تعريب مجتمعي للعبة Bloodborne على نسخة bbport.
-الترجمة الآلية بتشتغل على دفعات CSV. ترجماته بتوصل لـ `needs_review` إذا ما فيها أخطاء، وإذا فيها أخطاء بتضل `draft`. كل سطر لازم يراجعه إنسان ويعتمده باسمه قبل ما يدخل المود.
+<p align="center">
+  **Community Arabic Localization for Bloodborne (bbport)**
+  <br>
+  A fan-made Arabic localization project bringing the world of Yharnam closer to Arabic-speaking players.
+</p>
 
-## بنية المجلدات
+<p align="center">
+  <a href="https://ko-fi.com/danakle">
+    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support the project on Ko-fi" />
+  </a>
+</p>
 
-| المجلد | شو فيه | الحالة |
-|---|---|---|
-| `common` | أدوات مشتركة: المسارات، كشف الأكواد والمتغيرات، معالجة العربي (ربط الحروف + RTL) | ✅ |
-| `database` | قاعدة SQLite (`schema.sql` + `db.py`): النصوص، الحالات، السجل، القاموس | ✅ |
-| `glossary` | `glossary.csv` (القاموس) و`style_guide_ar.md` (دليل الأسلوب) | ✅ |
-| `validation` | المدقق: الأكواد، القاموس، الطول، اليونيكود، الفراغات والتكرار | ✅ |
-| `fonts` | فحص دعم الخط للعربي + صور معاينة PNG. حطي هون خطوط OFL | ✅ |
-| `tests` | اختبارات + عينات أصلية من تأليفنا (`tests/samples`) | ✅ |
-| `translation` | دفعات الترجمة (CSV): `batch.py` و`TRANSLATOR.md` و`batches/out` و`batches/in` | ✅ |
-| `extraction` | استخراج النصوص من ملفات اللعبة | ⏳ بعد التحقق من نسخة رسمية |
-| `mod_builder` | بناء ملفات المود | ⏳ لاحقاً |
-| `logs` | تقارير التدقيق والمعاينات | |
-| `backups` / `documentation` | نسخ احتياطية / توثيق | |
+---
 
-## حالات الترجمة
+## 🇬🇧 English
 
-```
-pending ──(ترجمة)──> draft ──(review)──> needs_review ──(approve + اسم مراجع)──> approved
-                       ▲                        │                                   │
-                       └──────(reject / تعديل النص)──────────────────────────────────┘
-```
+### About the Project
 
-- `pending`: ما في ترجمة.
-- `draft`: في ترجمة، بس فيها أخطاء من المدقق، أو ما حدا جهّزها للمراجعة لسا.
-- `needs_review`: ما فيها أخطاء، وناطرة مراجع. ترجمات الدفعات بتوصل هون إذا ما فيها أخطاء.
-- `approved`: مراجع بشري اعتمدها باسمه، وما فيها أخطاء تدقيق. **بس هدول بيدخلوا المود.**
+Bloodborne Arabic Localization is a community-driven project that aims to make Bloodborne accessible to Arabic-speaking players through an Arabic in-game text experience.
 
-قاعدة البيانات نفسها بتمنع `approved` بلا اسم مراجع. استيراد CSV ما بيعمل `approved` أبداً. وأي تعديل على نص معتمد بيرجعه `draft`.
+The project focuses on preserving the game's dark atmosphere while providing clear, natural Arabic translations.
 
-## الأوامر (من مجلد المشروع)
+This is an unofficial fan-made localization for the **bbport Windows version**.
 
-```
-.venv\Scripts\python cli.py init
-.venv\Scripts\python cli.py glossary-load
-.venv\Scripts\python cli.py import tests\samples\samples_original.csv
-.venv\Scripts\python cli.py status
-.venv\Scripts\python cli.py validate
-.venv\Scripts\python cli.py preview --status draft
-.venv\Scripts\python cli.py review sample:ui:stat_insight --by Dana
-.venv\Scripts\python cli.py approve sample:ui:stat_insight --reviewer Dana
-.venv\Scripts\python cli.py export translation\export.csv
-```
+### 🎮 Installation Guide
 
-### نسخ الذكر والأنثى
+#### Requirements
 
-النص بيضل `shared` (ترجمة وحدة)، إلا إذا الصياغة العربية بتتغير حسب جنس شخصية اللاعب، ولو بالتشكيل بس. وقتها بيصير إله نسختين `male` و`female` بنفس المعرّف، وكل نسخة بتنراجع وبتنعتمد لحالها.
+- Bloodborne version **1.09**.
+- A working Windows installation of **bbport**.
+- The ready-to-use `BloodborneArabic_test` mod folder.
 
-```
-.venv\Scripts\python cli.py show demo:system:received
-.venv\Scripts\python cli.py gender-split demo:system:received --male "تسلّمتَ %s." --female "تسلّمتِ %s." --by Dana
-.venv\Scripts\python cli.py review demo:system:received --gender female --by Dana
-.venv\Scripts\python cli.py approve demo:system:received --gender female --reviewer Dana
-.venv\Scripts\python cli.py select-gender female
-```
-- النص اللي إله نسختين، أي أمر عليه بدون `--gender` بينرفض.
-- بالدفعات، عمود `translation_female` هو اللي بيعمل التقسيم. الشرح كامل بـ `translation/TRANSLATOR.md`.
-- الجنس النشط بينحفظ بقاعدة البيانات، وما بيتغير إلا بأمر `select-gender`.
-- `gender-merge` (رجعة النسختين لترجمة وحدة) **معطّل مؤقتاً** لحد المخطط v3، لأنو كان بيعدّل سجل التاريخ (القاعدة 9). الأمر بيرفض قبل ما يلمس قاعدة البيانات.
+#### Installation Steps
 
-### دفعات الترجمة
+1. Download the ready-to-use Arabic mod.
+2. Open your bbport installation directory.
+3. Locate the `mods` folder. If it does not exist, create it.
+4. Copy the entire `BloodborneArabic_test` folder into `mods`.
+5. Open `Play Bloodborne.exe`.
+6. Go to **Mods & patches** and make sure `BloodborneArabic_test` is enabled.
+7. Open **Game & effects**.
+8. Set **Text language** to `English`.
 
-```
-.venv\Scripts\python cli.py sources-import my_texts.csv --dry-run
-.venv\Scripts\python cli.py sources-import my_texts.csv
-.venv\Scripts\python cli.py batch-export --limit 20
-.venv\Scripts\python cli.py batch-import translation\batches\in\batch_XXXX.csv --dry-run
-.venv\Scripts\python cli.py batch-import translation\batches\in\batch_XXXX.csv
-.venv\Scripts\python cli.py review-export
-.venv\Scripts\python cli.py batch-list
-.venv\Scripts\python cli.py batch-cancel batch_XXXX --by Dana --reason "file lost"
-```
-- ملف الدفعة بيطلع بـ `translation\batches\out\`، ومنرجّعه مترجم لـ `translation\batches\in\`. التفاصيل بـ `translation/README.md`، وتعليمات المترجم بـ `translation/TRANSLATOR.md`.
-- `--dry-run` بيفحص وبيكتب التقرير بس، وقاعدة البيانات بتضل متل ما هي.
-- الاستيراد ما بيعتمد شي، وما بيغيّر نص معتمد أبداً. لتغيير نص معتمد، المراجع بيعمل `reject` أول.
-- `review-export` بيكتب ورقة مراجعة CSV للقراءة بس. الاعتماد بيضل نص نص بأمر `approve`.
+   **Important:** The mod replaces the `engus` and `enggb` text layers. The launcher's language setting does not affect the in-game text.
 
-الاختبارات: `powershell -ExecutionPolicy Bypass -File tools\run_tests.ps1`. بتشغّل `tools\run_tests_isolated.py`، وهو بيتأكد إنو الاختبارات ما غيّرت `logs\` ولا `translation\batches\` ولا `backups\` ولا `database\`، وإنها نضّفت ملفاتها المؤقتة.
+9. Launch the game and enjoy!
 
-## قواعد المشروع
+### 🗑️ Uninstallation
 
-- ملفات اللعبة الأصلية ما بتنعدل أبداً. المود بيتبنى بمجلد منفصل.
-- ما بننشر ولا بنوزع أي ملف من ملفات اللعبة (`.gitignore` بيمنعهم).
-- قاعدة البيانات بتخزن العربي بشكله **المنطقي** (حروف عادية). ربط الحروف وقلب الاتجاه بيصيروا بس وقت المعاينة والبناء.
-- العينات بالمشروع من تأليفنا، مش منسوخة من اللعبة.
+To remove the Arabic localization:
 
-## أدوات مساعدة
+- Disable the mod from **Mods & patches**, or
+- Remove the `BloodborneArabic_test` folder from the `mods` directory.
 
-تم استعمال Claude وCodex بالمساعدة بالكود والترجمة والمراجعة. كل ترجمة بتنراجع وبتنعتمد من إنسان.
+The original game files are not modified by the mod.
+
+### 🔧 Troubleshooting
+
+**The game still displays English text:**
+- Close the game completely and launch it again.
+- Make sure the mod is enabled.
+- Confirm that **Text language** is set to `English`.
+
+**The mod does not appear in bbport:**
+- Make sure the mod folder is placed directly inside `mods`.
+- Confirm that the folder was copied completely.
+
+**After updating bbport:**
+- A new compatible mod build may be required because the localization is built on top of bbport's text layers.
+
+### ⚠️ Current Limitations
+
+Some content may remain in English:
+
+- SuperMedo server messages.
+- Text rendered as images.
+- Text not yet included in the current translation draft.
+- Certain technical names and numbers in bbport menus.
+
+### 📌 Project Notes
+
+- This is an experimental release.
+- Translations are currently considered drafts and have not all received final human approval.
+- The game engine's Scaleform interface does not natively support Arabic. The mod includes the necessary Arabic font characters and text shaping/direction processing.
+- The mod is intended for use with the specified bbport version.
+
+### ☕ Support the Project
+
+If you enjoy this localization and would like to support its continued development, you can buy me a coffee.
+
+Your support is completely optional. The localization remains free for everyone.
+
+<p align="center">
+  <a href="https://ko-fi.com/danakle">
+    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" />
+  </a>
+</p>
+
+Thank you for supporting independent fan projects! ❤️
+
+---
+
+## 🇸🇦 العربية
+
+### نبذة عن المشروع
+
+مشروع تعريب مجتمعي للعبة **Bloodborne**، يهدف إلى إتاحة تجربة عربية للاعبين الناطقين باللغة العربية، مع الحفاظ على الأجواء القاتمة والغامضة للعالم الأصلي وأسلوبه الأدبي.
+
+هذا التعريب إصدار غير رسمي من صنع المجتمع، ومخصص لنسخة **bbport على Windows**.
+
+### 🎮 طريقة التركيب
+
+#### المتطلبات
+
+- لعبة Bloodborne إصدار **1.09**.
+- نسخة Windows تعمل من **bbport**.
+- مجلد المود العربي الجاهز `BloodborneArabic_test`.
+
+#### خطوات التثبيت
+
+1. حمّل مجلد التعريب الجاهز.
+2. افتح مجلد تثبيت bbport على جهازك.
+3. ابحث عن مجلد `mods`. إذا لم يكن موجوداً، أنشئه.
+4. انسخ مجلد `BloodborneArabic_test` بالكامل إلى داخل `mods`.
+5. افتح `Play Bloodborne.exe`.
+6. انتقل إلى **Mods & patches** وتأكد من تفعيل `BloodborneArabic_test`.
+7. افتح **Game & effects**.
+8. اضبط خيار **Text language** على `English`.
+
+   **مهم:** يستبدل المود طبقات النصوص `engus` و`enggb`، لذلك يجب اختيار اللغة الإنجليزية. أما خيار لغة المشغّل `Launcher language` فلا يؤثر على نصوص اللعبة.
+
+9. شغّل اللعبة واستمتع بالتعريب!
+
+### 🗑️ إزالة التعريب
+
+لإزالة المود يمكنك:
+
+- تعطيله من صفحة **Mods & patches**.
+- أو إخراج مجلد `BloodborneArabic_test` من مجلد `mods`.
+
+لا يقوم المود بتعديل ملفات اللعبة الأصلية.
+
+### 🔧 حل المشكلات الشائعة
+
+**إذا بقيت النصوص باللغة الإنجليزية:**
+- أغلق اللعبة بالكامل ثم أعد تشغيلها.
+- تأكد من تفعيل المود.
+- تأكد من ضبط **Text language** على `English`.
+
+**إذا لم يظهر المود في قائمة bbport:**
+- تأكد من وضع مجلد المود مباشرة داخل `mods`.
+- تأكد من نسخ المجلد كاملاً.
+
+**بعد تحديث bbport:**
+- قد تحتاج إلى إصدار جديد من المود، لأنه مبني على طبقات النصوص الخاصة بـ bbport.
+
+### ⚠️ حدود النسخة الحالية
+
+قد تبقى بعض النصوص باللغة الإنجليزية، ومنها:
+
+- رسائل سيرفر SuperMedo.
+- النصوص المرسومة كصور داخل اللعبة.
+- النصوص التي لم تُدرج بعد ضمن مسودة الترجمة الحالية.
+- بعض الأسماء التقنية والأرقام في قوائم bbport.
+
+### 📌 ملاحظات حول المشروع
+
+- هذا إصدار تجريبي من التعريب.
+- الترجمات الحالية ما زالت مسودات، ولم تحصل جميعها على الاعتماد البشري النهائي.
+- واجهة اللعبة المبنية على محرك Scaleform لا تدعم العربية افتراضياً؛ لذلك يتضمن المود دعم محارف الخط العربي ومعالجة تشكيل الحروف واتجاه النص.
+- المود مخصص للاستخدام مع إصدار bbport المحدد.
+
+### ☕ ادعم استمرار المشروع
+
+إذا أعجبك التعريب وأردت المساهمة في استمرار تطويره وتحسينه، يمكنك دعمي عبر Ko-fi.
+
+الدعم اختياري بالكامل، وسيبقى التعريب متاحاً للجميع مجاناً.
+
+<p align="center">
+  <a href="https://ko-fi.com/danakle">
+    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ادعمني عبر Ko-fi" />
+  </a>
+</p>
+
+شكراً لكل من يدعم مشاريع التعريب المستقلة! ❤️
+
+---
+
+<p align="center">
+  **Fear the Old Blood.**
+  <br>
+  <sub>Bloodborne Arabic Localization — Community Project</sub>
+</p>
