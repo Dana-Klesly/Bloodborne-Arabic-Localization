@@ -28,7 +28,7 @@ from common.arabic import shape_for_display  # noqa: E402
 from common.placeholders import find_tokens  # noqa: E402
 from mod_builder import fromsoft, swf_font  # noqa: E402
 from mod_builder.build_test_mod import (ARCHIVES, LOCALE, QUIT_TEXTS, archive_name,  # noqa: E402
-                                         load_draft, load_extras)
+                                         default_draft, fill_sources, load_draft, load_extras)
 
 
 def fmgs(path: Path):
@@ -190,7 +190,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--mod", type=Path, required=True)
     p.add_argument("--game", type=Path, default=ROOT / "game" / "CUSA03173" / "dvdroot_ps4")
-    p.add_argument("--draft", type=Path, default=ROOT / "translation" / "arabic_player_draft.csv")
+    p.add_argument("--draft", type=Path, default=None)
     p.add_argument("--preview", type=Path, help="write preview PNGs into this folder")
     a = p.parse_args(argv)
     problems = []
@@ -199,7 +199,8 @@ def main(argv=None) -> int:
         problems.append(msg)
 
     report = json.loads((a.mod / "build_report.json").read_text(encoding="utf-8"))
-    rows = load_draft(a.draft)
+    rows = load_draft(a.draft or default_draft())
+    fill_sources(rows, {arc: fmgs(a.game / "msg" / LOCALE / f"{arc}.msgbnd.dcx") for arc in ARCHIVES})
     extras = load_extras(Path(report["extras_csv"])) if report.get("extras_csv") else []
     used, all_counts, news = set(), {}, {}
     for loc, info in report["locales"].items():
