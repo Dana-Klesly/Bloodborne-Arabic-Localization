@@ -96,7 +96,7 @@ def banner_glyphs(texts: dict[int, str], font_path: Path, drips: bool, size: flo
             ly = [v for c in cs for seg in c for v in seg[2::2]]
             top, bottom = min(ly), max(ly)
             if drips:
-                cs = blood_drips.add_drips(cs, h0, seed=len(text) * 3)
+                cs = blood_drips.add_drips(cs, h0, seed=2)
             k = BANNER_LETTERS * size / (bottom - top)
             mid_box, mid = BANNER_CENTRE + offset, (top + bottom) / 2
 
@@ -455,7 +455,7 @@ def main(argv=None) -> int:
                         "--banner-font (default when that font exists), english, or arabic (plain glyphs)")
     p.add_argument("--banner-font", type=Path, default=ROOT / "fonts" / "Jomhuria-Regular.ttf")
     p.add_argument("--banner-texts", type=Path, default=ROOT / "translation" / "banners_ar.csv")
-    p.add_argument("--banner-size", type=float, default=1.3,
+    p.add_argument("--banner-size", type=float, default=1.5,
                    help="drawn banner letter height / the English capitals' height (1.0 = as tall)")
     p.add_argument("--banner-offset", type=float, default=0,
                    help="move drawn banners down (+) or up (-), in font units (20480 = one line height)")
