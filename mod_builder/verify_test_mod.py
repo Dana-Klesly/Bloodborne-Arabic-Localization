@@ -27,7 +27,7 @@ sys.path.insert(0, str(ROOT))
 from common.arabic import shape_for_display  # noqa: E402
 from common.placeholders import find_tokens  # noqa: E402
 from mod_builder import fromsoft, swf_font  # noqa: E402
-from mod_builder.build_test_mod import (ARCHIVES, LOCALE, QUIT_TEXTS, archive_name,  # noqa: E402
+from mod_builder.build_test_mod import (ARCHIVES, BANNER_IDS, LOCALE, QUIT_TEXTS, archive_name,  # noqa: E402
                                          default_draft, fill_sources, load_draft, load_extras)
 
 
@@ -36,7 +36,8 @@ def fmgs(path: Path):
     return {fid: fromsoft.read_fmg(d)[1] for fid, d in fromsoft.bnd4_contents(bnd).items()}
 
 
-def check_locale(loc, info, game: Path, mod: Path, rows, extras, strip_harakat: bool, fail):
+def check_locale(loc, info, game: Path, mod: Path, rows, extras, strip_harakat: bool, fail,
+                 arabic_banners: bool = True):
     """One text folder: every string is either the base's (bbport layer or game file), or what
     the CSV row / extras row / Quit to Desktop text asks for. Nothing else may differ."""
     shape = lambda t: shape_for_display(t, delete_harakat=strip_harakat)  # noqa: E731
@@ -60,6 +61,9 @@ def check_locale(loc, info, game: Path, mod: Path, rows, extras, strip_harakat: 
                 continue
             fid, sid = int(r["bnd_entry_id"]), int(r["entry_id"])
             if ref[arc][fid].get(sid) != r["source"] or sid not in base[fid]:
+                continue
+            if not arabic_banners and (arc, fid, sid) in BANNER_IDS:
+                counts["banner_kept_english"] += 1
                 continue
             if sid in gl[fid] and base[fid][sid] != gl[fid][sid]:
                 counts["kept_bbport_text"] += 1
@@ -205,7 +209,8 @@ def main(argv=None) -> int:
     used, all_counts, news = set(), {}, {}
     for loc, info in report["locales"].items():
         c, u, news[loc] = check_locale(loc, info, a.game, a.mod, rows, extras,
-                                       report.get("strip_harakat", False), fail)
+                                       report.get("strip_harakat", False), fail,
+                                       report.get("arabic_banners", True))
         all_counts[loc] = dict(c)
         used |= u
     counts, untouched, new = all_counts, None, news[LOCALE] if LOCALE in news else next(iter(news.values()))

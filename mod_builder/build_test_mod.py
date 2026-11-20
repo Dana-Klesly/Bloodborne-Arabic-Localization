@@ -57,6 +57,11 @@ QUIT_TEXTS = {  # draft wording written for this test build; not from the transl
     (204, QUIT_SYSTEM_ID): "هل تريد إنهاء اللعبة والعودة إلى سطح المكتب؟",
 }
 
+# The big centre-screen banners (YOU DIED, BLOOD ECHOES RETRIEVED, PREY SLAUGHTERED, NIGHTMARE
+# SLAIN...) are drawn by their own movie at a large size with wide letter spacing; Arabic looks
+# poor there, so by default they keep the game's English (--arabic-banners turns them on).
+BANNER_IDS = {("menu", 200, sid) for sid in range(522000, 522008)}
+
 # Arabic glyphs added to the game font beyond the ones the texts need (so later drafts work).
 EXTRA_CODES = ([0x060C, 0x061B, 0x061F, 0x0640, 0x066A, 0x066B, 0x066C, 0x0670]
                + list(range(0x0621, 0x063B)) + list(range(0x0641, 0x0653))
@@ -99,6 +104,16 @@ def archive_name(source_file: str) -> str:
     if f"/msg/{LOCALE}/" not in source_file.replace("\\", "/"):
         raise ValueError(f"source_file not in msg/{LOCALE}: {source_file!r}")
     return stem.split(".")[0]
+
+
+def drop_banners(plan, issues) -> int:
+    n = 0
+    for arc, fid, sid in BANNER_IDS:
+        if plan.get(arc, {}).get(fid, {}).pop(sid, None) is not None:
+            issues.append((f"bb:{LOCALE}:ui:bnd{fid}:{sid}", "kept_english_banner",
+                           "centre-screen banner: English kept (use --arabic-banners to show the Arabic)"))
+            n += 1
+    return n
 
 
 def plan_rows(rows, originals, issues, strip_harakat=False):
@@ -364,6 +379,8 @@ def main(argv=None) -> int:
     p.add_argument("--extras", type=Path, default=ROOT / "translation" / "bbport_extras_draft.csv",
                    help="Arabic draft for bbport's added texts (applied where the base has that English text)")
     p.add_argument("--locales", default="engus,enggb", help="text folders to write (same ids, same font)")
+    p.add_argument("--arabic-banners", action="store_true",
+                   help="also write the Arabic for the centre-screen banners (YOU DIED, ...)")
     p.add_argument("--strip-harakat", action="store_true", help="drop harakat in the DISPLAY copy only")
     a = p.parse_args(argv)
     a.draft = a.draft or default_draft()
@@ -381,6 +398,8 @@ def main(argv=None) -> int:
     refs = {arc: read_archive(game / "msg" / LOCALE / f"{arc}.msgbnd.dcx")[1] for arc in ARCHIVES}
     fill_sources(rows, refs)
     plan, stats = plan_rows(rows, refs, issues, a.strip_harakat)
+    if not a.arabic_banners:
+        stats["banners_kept_english"] = drop_banners(plan, issues)
     extras = load_extras(a.extras)
     locales = [x.strip() for x in a.locales.split(",") if x.strip()]
     built, locale_info = {}, {}
@@ -430,6 +449,7 @@ def main(argv=None) -> int:
         "locales": locale_info,
         "font_file": a.font.name,
         "strip_harakat": a.strip_harakat,
+        "arabic_banners": a.arabic_banners,
         "stats": dict(stats),
         "font": font_info,
         "bbport_out": str(a.bbport_out) if a.bbport_out else None,
