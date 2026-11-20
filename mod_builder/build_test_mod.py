@@ -65,7 +65,9 @@ QUIT_TEXTS = {  # draft wording written for this test build; not from the transl
 # english: the game's English; arabic: the draft text in the normal Arabic glyphs.
 BANNER_IDS = {("menu", 200, sid) for sid in range(522000, 522008)}
 BANNER_FIRST_CODE = 0xE000
-BANNER_BOX = (-18020, 2460)   # the game font's ascent..descent: a banner glyph stays inside it
+BANNER_BOX = (-18020, 2460)   # the game font's ascent..descent
+BANNER_LETTERS = 15700        # the game font's capital height ("YOU DIED"): size 1.0 = as tall
+BANNER_CENTRE = -15700 / 2 + 2500  # letters centred on the capitals' middle, nudged down (in-game: was too high)
 
 
 def load_banner_texts(path: Path) -> dict[int, str]:
@@ -74,7 +76,7 @@ def load_banner_texts(path: Path) -> dict[int, str]:
         return {int(r["id"].rsplit(":", 1)[1]): r["text"].strip() for r in csv.DictReader(f) if r["text"].strip()}
 
 
-def banner_glyphs(texts: dict[int, str], font_path: Path, drips: bool, size: float = 1.25):
+def banner_glyphs(texts: dict[int, str], font_path: Path, drips: bool, size: float = 1.3, offset: float = 0):
     """-> ({string id: PUA string}, {code: (shape bytes, advance)}, info). A glyph advance is a
     signed 16-bit number, so a wide phrase is cut into slices of at most 30000 units, one
     Private-Use character each, drawn side by side. The same phrase reuses its characters."""
@@ -90,12 +92,13 @@ def banner_glyphs(texts: dict[int, str], font_path: Path, drips: bool, size: flo
         if text not in by_text:
             h0 = 20480
             cs, adv = phrase_glyph.phrase_contours(font_path, text, height=h0)
+            # size and place by the LETTERS (drips only hang below them)
+            ly = [v for c in cs for seg in c for v in seg[2::2]]
+            top, bottom = min(ly), max(ly)
             if drips:
                 cs = blood_drips.add_drips(cs, h0, seed=len(text) * 3)
-            ys = [v for c in cs for seg in c for v in seg[2::2]]
-            top, bottom = min(ys), max(ys)
-            k = (BANNER_BOX[1] - BANNER_BOX[0]) * size / (bottom - top)  # 1.0 = fits the line box
-            mid_box, mid = (BANNER_BOX[0] + BANNER_BOX[1]) / 2, (top + bottom) / 2
+            k = BANNER_LETTERS * size / (bottom - top)
+            mid_box, mid = BANNER_CENTRE + offset, (top + bottom) / 2
 
             def tf(seg):
                 vals = list(seg[1:])
@@ -452,8 +455,10 @@ def main(argv=None) -> int:
                         "--banner-font (default when that font exists), english, or arabic (plain glyphs)")
     p.add_argument("--banner-font", type=Path, default=ROOT / "fonts" / "Jomhuria-Regular.ttf")
     p.add_argument("--banner-texts", type=Path, default=ROOT / "translation" / "banners_ar.csv")
-    p.add_argument("--banner-size", type=float, default=1.25,
-                   help="drawn banner height / the font's line height (1.0 fits it exactly; bigger may clip)")
+    p.add_argument("--banner-size", type=float, default=1.3,
+                   help="drawn banner letter height / the English capitals' height (1.0 = as tall)")
+    p.add_argument("--banner-offset", type=float, default=0,
+                   help="move drawn banners down (+) or up (-), in font units (20480 = one line height)")
     p.add_argument("--no-banner-drips", action="store_true", help="drawn banners without blood drips")
     p.add_argument("--strip-harakat", action="store_true", help="drop harakat in the DISPLAY copy only")
     a = p.parse_args(argv)
@@ -478,7 +483,8 @@ def main(argv=None) -> int:
         stats["banners_kept_english"] = drop_banners(plan, issues)
     elif style == "drawn":
         banner_codes, banner_extra, banner_info = banner_glyphs(load_banner_texts(a.banner_texts), a.banner_font,
-                                                                not a.no_banner_drips, a.banner_size)
+                                                                not a.no_banner_drips, a.banner_size,
+                                                                a.banner_offset)
         for sid, ch in banner_codes.items():
             if ("menu", 200, sid) in BANNER_IDS:
                 plan["menu"].setdefault(200, {})[sid] = ch
