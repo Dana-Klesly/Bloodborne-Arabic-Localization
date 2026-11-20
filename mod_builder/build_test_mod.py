@@ -57,6 +57,79 @@ QUIT_TEXTS = {  # draft wording written for this test build; not from the transl
     (204, QUIT_SYSTEM_ID): "هل تريد إنهاء اللعبة والعودة إلى سطح المكتب؟",
 }
 
+# The big centre-screen banners (YOU DIED, BLOOD ECHOES RETRIEVED, PREY SLAUGHTERED, NIGHTMARE
+# SLAIN...) are drawn by menu/fe.gfx at size 124 in bold; plain Arabic letters look poor there.
+# --banner-style drawn (default when the banner font exists): each banner becomes ONE Private-Use
+# character whose glyph is the whole phrase, shaped by HarfBuzz in a display font (optionally with
+# blood drips) - like a picture, but the game still colours, fades and centres it.
+# english: the game's English; arabic: the draft text in the normal Arabic glyphs.
+BANNER_IDS = {("menu", 200, sid) for sid in range(522000, 522008)}
+BANNER_FIRST_CODE = 0xE000
+BANNER_BOX = (-18020, 2460)   # the game font's ascent..descent
+BANNER_LETTERS = 15700        # the game font's capital height ("YOU DIED"): size 1.0 = as tall
+BANNER_CENTRE = -15700 / 2 + 2500  # letters centred on the capitals' middle, nudged down (in-game: was too high)
+
+
+def load_banner_texts(path: Path) -> dict[int, str]:
+    """{string id: Arabic phrase} from translation/banners_ar.csv (id,text)."""
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        return {int(r["id"].rsplit(":", 1)[1]): r["text"].strip() for r in csv.DictReader(f) if r["text"].strip()}
+
+
+def banner_glyphs(texts: dict[int, str], font_path: Path, drips: bool, size: float = 1.3, offset: float = 0):
+    """-> ({string id: PUA string}, {code: (shape bytes, advance)}, info). A glyph advance is a
+    signed 16-bit number, so a wide phrase is cut into slices of at most 30000 units, one
+    Private-Use character each, drawn side by side. The same phrase reuses its characters."""
+    import math
+    import pathops
+    from mod_builder import blood_drips, phrase_glyph
+    from mod_builder.blood_drips import _from_path, _to_path
+    codes, glyphs, info = {}, {}, {}
+    by_text = {}
+    next_code = BANNER_FIRST_CODE
+    for sid in sorted(texts):
+        text = texts[sid]
+        if text not in by_text:
+            h0 = 20480
+            cs, adv = phrase_glyph.phrase_contours(font_path, text, height=h0)
+            # size and place by the LETTERS (drips only hang below them)
+            ly = [v for c in cs for seg in c for v in seg[2::2]]
+            top, bottom = min(ly), max(ly)
+            if drips:
+                cs = blood_drips.add_drips(cs, h0, seed=2)
+            k = BANNER_LETTERS * size / (bottom - top)
+            mid_box, mid = BANNER_CENTRE + offset, (top + bottom) / 2
+
+            def tf(seg):
+                vals = list(seg[1:])
+                for i in range(0, len(vals), 2):
+                    vals[i] = round(vals[i] * k)
+                    vals[i + 1] = round((vals[i + 1] - mid) * k + mid_box)
+                return (seg[0], *vals)
+            cs = [[tf(seg) for seg in c] for c in cs]
+            width = round(adv * k)
+            n = max(1, math.ceil(width / 30000))
+            w = math.ceil(width / n)
+            whole = _to_path(cs)
+            whole.simplify(fix_winding=True)
+            chars = ""
+            for j in range(n):
+                rect = pathops.Path()
+                x0, x1 = j * w, min(width, (j + 1) * w)
+                rect.moveTo(x0, -60000); rect.lineTo(x1, -60000); rect.lineTo(x1, 60000); rect.lineTo(x0, 60000)
+                rect.close()
+                piece = _from_path(pathops.op(whole, rect, pathops.PathOp.INTERSECTION))
+                piece = [[(seg[0], *[v - x0 if i % 2 == 0 else v for i, v in enumerate(seg[1:])]) for seg in c]
+                         for c in piece]
+                glyphs[next_code] = (swf_font.encode_shape(piece), x1 - x0)
+                chars += chr(next_code)
+                next_code += 1
+            by_text[text] = chars
+            info[text] = {"chars": [f"U+{ord(c):04X}" for c in chars], "width": width}
+        codes[sid] = by_text[text]
+    return codes, glyphs, info
+
+
 # Arabic glyphs added to the game font beyond the ones the texts need (so later drafts work).
 EXTRA_CODES = ([0x060C, 0x061B, 0x061F, 0x0640, 0x066A, 0x066B, 0x066C, 0x0670]
                + list(range(0x0621, 0x063B)) + list(range(0x0641, 0x0653))
@@ -99,6 +172,16 @@ def archive_name(source_file: str) -> str:
     if f"/msg/{LOCALE}/" not in source_file.replace("\\", "/"):
         raise ValueError(f"source_file not in msg/{LOCALE}: {source_file!r}")
     return stem.split(".")[0]
+
+
+def drop_banners(plan, issues) -> int:
+    n = 0
+    for arc, fid, sid in BANNER_IDS:
+        if plan.get(arc, {}).get(fid, {}).pop(sid, None) is not None:
+            issues.append((f"bb:{LOCALE}:ui:bnd{fid}:{sid}", "kept_english_banner",
+                           "centre-screen banner: English kept (use --arabic-banners to show the Arabic)"))
+            n += 1
+    return n
 
 
 def plan_rows(rows, originals, issues, strip_harakat=False):
@@ -241,7 +324,7 @@ def build_locale(loc, game, bbport_out, plan, extras, issues, stats, strip_harak
     return out, info
 
 
-def build_font(game_font: bytes, ttf_path: Path, needed: set[int], scale: float):
+def build_font(game_font: bytes, ttf_path: Path, needed: set[int], scale: float, extra_glyphs=None):
     from fontTools.ttLib import TTFont
 
     head, pos, ln = swf_font.find_font3(game_font)
@@ -253,6 +336,8 @@ def build_font(game_font: bytes, ttf_path: Path, needed: set[int], scale: float)
     cmap = tt.getBestCmap()
     gs = tt.getGlyphSet()
     hmtx = tt["hmtx"]
+    extra_glyphs = extra_glyphs or {}
+    needed = set(needed) - set(extra_glyphs)
     want = sorted((needed | set(EXTRA_CODES)) - have)
     missing = [c for c in want if c not in cmap]
     want = [c for c in want if c in cmap]
@@ -270,6 +355,7 @@ def build_font(game_font: bytes, ttf_path: Path, needed: set[int], scale: float)
         if unicodedata.category(chr(code)) == "Mn":
             advance = 0  # combining marks sit on the next glyph in visual order
         glyphs[code] = (swf_font.encode_shape(contours), advance)
+    glyphs.update(extra_glyphs)
     new_font = swf_font.add_glyphs(font, glyphs)
     body = swf_font.build_font3(new_font)
     out = swf_font.replace_tag(game_font, head, pos, ln, 75, body)
@@ -364,6 +450,16 @@ def main(argv=None) -> int:
     p.add_argument("--extras", type=Path, default=ROOT / "translation" / "bbport_extras_draft.csv",
                    help="Arabic draft for bbport's added texts (applied where the base has that English text)")
     p.add_argument("--locales", default="engus,enggb", help="text folders to write (same ids, same font)")
+    p.add_argument("--banner-style", choices=["drawn", "english", "arabic"], default=None,
+                   help="centre-screen banners (YOU DIED, ...): drawn = whole phrase as one glyph in "
+                        "--banner-font (default when that font exists), english, or arabic (plain glyphs)")
+    p.add_argument("--banner-font", type=Path, default=ROOT / "fonts" / "Jomhuria-Regular.ttf")
+    p.add_argument("--banner-texts", type=Path, default=ROOT / "translation" / "banners_ar.csv")
+    p.add_argument("--banner-size", type=float, default=1.5,
+                   help="drawn banner letter height / the English capitals' height (1.0 = as tall)")
+    p.add_argument("--banner-offset", type=float, default=0,
+                   help="move drawn banners down (+) or up (-), in font units (20480 = one line height)")
+    p.add_argument("--no-banner-drips", action="store_true", help="drawn banners without blood drips")
     p.add_argument("--strip-harakat", action="store_true", help="drop harakat in the DISPLAY copy only")
     a = p.parse_args(argv)
     a.draft = a.draft or default_draft()
@@ -381,6 +477,18 @@ def main(argv=None) -> int:
     refs = {arc: read_archive(game / "msg" / LOCALE / f"{arc}.msgbnd.dcx")[1] for arc in ARCHIVES}
     fill_sources(rows, refs)
     plan, stats = plan_rows(rows, refs, issues, a.strip_harakat)
+    banner_extra, banner_info = {}, {}
+    style = a.banner_style or ("drawn" if a.banner_font.is_file() and a.banner_texts.is_file() else "english")
+    if style == "english":
+        stats["banners_kept_english"] = drop_banners(plan, issues)
+    elif style == "drawn":
+        banner_codes, banner_extra, banner_info = banner_glyphs(load_banner_texts(a.banner_texts), a.banner_font,
+                                                                not a.no_banner_drips, a.banner_size,
+                                                                a.banner_offset)
+        for sid, ch in banner_codes.items():
+            if ("menu", 200, sid) in BANNER_IDS:
+                plan["menu"].setdefault(200, {})[sid] = ch
+        stats["banners_drawn"] = len(banner_codes)
     extras = load_extras(a.extras)
     locales = [x.strip() for x in a.locales.split(",") if x.strip()]
     built, locale_info = {}, {}
@@ -395,7 +503,7 @@ def main(argv=None) -> int:
                     if t:
                         used |= {ord(c) for c in t if c not in "\n\r"}
     game_font = (game / "menu" / LOCALE / "font.gfx").read_bytes()
-    font_bytes, font_info = build_font(game_font, a.font, used, a.scale)
+    font_bytes, font_info = build_font(game_font, a.font, used, a.scale, banner_extra)
     font_info["wrap_risk_rows"] = wrap_risks(rows, plan, font_bytes, issues)
 
     outputs = {}
@@ -415,6 +523,9 @@ def main(argv=None) -> int:
         outputs[(menu_dir / "font.gfx").relative_to(out_root).as_posix()] = sha256(font_bytes)
     if a.font_license:
         (out_root / ("FONT_LICENSE_" + a.font_license.name)).write_bytes(a.font_license.read_bytes())
+    banner_licence = a.banner_font.parent / "OFL-Jomhuria.txt"
+    if style == "drawn" and banner_licence.is_file():
+        (out_root / ("FONT_LICENSE_" + banner_licence.name)).write_bytes(banner_licence.read_bytes())
 
     with open(out_root / "issues_by_id.csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
@@ -430,6 +541,9 @@ def main(argv=None) -> int:
         "locales": locale_info,
         "font_file": a.font.name,
         "strip_harakat": a.strip_harakat,
+        "banner_style": style,
+        "banner_glyphs": banner_info,
+        "banner_codes": {str(k): v for k, v in (banner_codes.items() if style == "drawn" else [])},
         "stats": dict(stats),
         "font": font_info,
         "bbport_out": str(a.bbport_out) if a.bbport_out else None,
